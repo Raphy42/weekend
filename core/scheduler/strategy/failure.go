@@ -1,6 +1,6 @@
 package strategy
 
-import "weekend/core/errors"
+import "github.com/Raphy42/weekend/core/errors"
 
 type (
 	FailureStrategy        int

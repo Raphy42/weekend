@@ -1,9 +1,10 @@
-module weekend
+module github.com/Raphy42/weekend
 
 go 1.17
 
 require (
 	github.com/davecgh/go-spew v1.1.1
+	github.com/google/uuid v1.1.2
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/stretchr/testify v1.7.0
 	go.uber.org/dig v1.14.1

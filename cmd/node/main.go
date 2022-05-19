@@ -6,7 +6,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	"weekend/grpc/api"
+	"github.com/Raphy42/weekend/grpc/api"
 )
 
 type TestServer struct {

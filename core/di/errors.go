@@ -1,6 +1,6 @@
 package di
 
-import "weekend/core/errors"
+import "github.com/Raphy42/weekend/core/errors"
 
 var (
 	//EDependencyMissing is an error code signaling missing providers in the di DAG

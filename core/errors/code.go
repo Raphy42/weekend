@@ -3,7 +3,7 @@ package errors
 import (
 	"github.com/palantir/stacktrace"
 
-	"weekend/core/bitmask"
+	"github.com/Raphy42/weekend/core/bitmask"
 )
 
 const (

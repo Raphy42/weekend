@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"weekend/core/reflect"
+	"github.com/Raphy42/weekend/core/reflect"
 )
 
 type Module struct {

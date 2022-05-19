@@ -7,7 +7,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 
-	"weekend/core/logger"
+	"github.com/Raphy42/weekend/core/logger"
 )
 
 type DiagnosticManifest struct {

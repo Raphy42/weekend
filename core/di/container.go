@@ -7,8 +7,8 @@ import (
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 
-	"weekend/core/logger"
-	"weekend/core/reflect"
+	"github.com/Raphy42/weekend/core/logger"
+	"github.com/Raphy42/weekend/core/reflect"
 )
 
 type Container struct {

@@ -3,8 +3,8 @@ package scheduler
 import (
 	"context"
 
-	"weekend/grpc/api"
-	"weekend/grpc/service"
+	"github.com/Raphy42/weekend/grpc/api"
+	"github.com/Raphy42/weekend/grpc/service"
 )
 
 const (

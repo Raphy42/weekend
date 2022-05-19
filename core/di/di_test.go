@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"weekend/core/errors"
+	"github.com/Raphy42/weekend/core/errors"
 )
 
 type dummySystem struct {

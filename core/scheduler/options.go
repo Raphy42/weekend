@@ -3,7 +3,7 @@ package scheduler
 import (
 	"time"
 
-	"weekend/core/scheduler/strategy"
+	"github.com/Raphy42/weekend/core/scheduler/strategy"
 )
 
 type Options struct {

@@ -1,6 +1,6 @@
 package scheduler
 
-import "weekend/core/scheduler/strategy"
+import "github.com/Raphy42/weekend/core/scheduler/strategy"
 
 const (
 	DefaultMaximumRetries  = 5
