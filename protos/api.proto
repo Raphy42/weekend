@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+option go_package = "grpc/api";
+option java_multiple_files = true;
+option java_package = "io.kiwi.land.weekend.api";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+
+package api;
+
+/*
+TaskStatus state machine:
+- start
+? -> SCHEDULED
+
+- allow cancellation of scheduled jobs
+SCHEDULED -> PENDING
+  -> CANCELED
+
+- allow cancellation of pending jobs (in queue)
+PENDING -> STARTED
+  -> CANCELED
+
+- allow cancellation of running jobs and error handling
+STARTED -> FINISHED
+  -> CANCELED
+  -> STUCK
+  -> CRASHED
+
+- allow restart of failed jobs
+CRASHED -> SCHEDULED
+STUCK -> SCHEDULED
+CANCELED -> SCHEDULED
+
+- stop execution when process is finished
+FINISHED -> !
+ */
+enum TaskStatus {
+  // common
+  // - awaiting dispatch
+  SCHEDULED = 0;
+  // - pending consumption
+  PENDING = 1;
+  // - processing starts
+  STARTED = 2;
+  // - finished successfully
+  FINISHED = 3;
+  // - canceled
+  CANCELED = 4;
+  // errors
+  // - transient error
+  STUCK = 5;
+  // - persistent error
+  CRASHED = 6;
+}
+
+message Reason {
+  string cause = 1;
+}
+
+message Task {
+  string id = 1;
+  string name = 2;
+  Timestamps timestamps = 10;
+  TaskStatus status = 11;
+
+  optional google.protobuf.Any input = 20;
+  optional google.protobuf.Any output = 30;
+
+  RangeInt concurrency = 40;
+  RangeInt priority = 41;
+  RangeInt retry = 42;
+
+  optional Reason reason = 50;
+  optional google.protobuf.Any metadata = 100;
+}
+
+message Node {
+  string id = 1;
+  Timestamps timestamps = 10;
+  string hostname = 20;
+}
+
+message RangeInt {
+  int32 min = 1;
+  int32 max = 2;
+  int32 current = 3;
+}
+
+message Ownership {
+  string producerId = 10;
+  repeated string consumerIds = 20;
+}
+
+message Timestamps {
+  google.protobuf.Timestamp createdAt = 1;
+  google.protobuf.Timestamp lastUpdatedAt = 2;
+  optional google.protobuf.Timestamp finishedAt = 10;
+  optional google.protobuf.Timestamp startedAt = 20;
+}
+
+message ScheduleRequest {
+  string job = 1;
+  google.protobuf.Any args = 10;
+}
+
+message IdRequest {
+  string id = 1;
+}
+
+service ScheduleService {
+  rpc Schedule(ScheduleRequest) returns (Task) {}
+  rpc Cancel(IdRequest) returns (Task) {}
+  //  rpc Requeue()
+  rpc Info(IdRequest) returns (Task) {}
+}
