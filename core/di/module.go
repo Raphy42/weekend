@@ -50,7 +50,7 @@ func Declare(name string, options ...ModuleOption) Module {
 func sprint(items []interface{}) string {
 	out := make([]string, len(items))
 	for idx, item := range items {
-		out[idx] = "/t" + reflect.Print(item)
+		out[idx] = "/t" + reflect.SPrint(item)
 	}
 	return strings.Join(out, "\n")
 }

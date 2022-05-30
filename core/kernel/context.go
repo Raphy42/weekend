@@ -1,4 +1,4 @@
-package scheduler
+package kernel
 
 import "context"
 
@@ -13,7 +13,7 @@ func (s *SchedulingContext) WithMetadata(key string, value interface{}) *Schedul
 	return s
 }
 
-func newSchedulingContext(parent ...context.Context) *SchedulingContext {
+func NewSchedulingContext(parent ...context.Context) *SchedulingContext {
 	parentCtx := context.Background()
 	if len(parent) != 0 {
 		parentCtx = parent[0]
@@ -27,5 +27,5 @@ func newSchedulingContext(parent ...context.Context) *SchedulingContext {
 }
 
 func Context(parent ...context.Context) *SchedulingContext {
-	return newSchedulingContext(parent...)
+	return NewSchedulingContext(parent...)
 }

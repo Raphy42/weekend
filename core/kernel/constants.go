@@ -1,6 +1,8 @@
-package scheduler
+package kernel
 
-import "github.com/Raphy42/weekend/core/scheduler/strategy"
+import (
+	"github.com/Raphy42/weekend/core/kernel/strategy"
+)
 
 const (
 	DefaultMaximumRetries  = 5
@@ -8,4 +10,8 @@ const (
 	DefaultFailureStrategy = strategy.AnyErrorFailureStrategy
 	DefaultPriority        = 10
 	DefaultConcurrency     = 16
+)
+
+var (
+	DefaultRetryStrategyHandler = strategy.ExponentialBackoffRetryStrategyHandler()
 )

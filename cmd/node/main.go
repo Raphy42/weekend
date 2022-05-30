@@ -2,42 +2,42 @@ package main
 
 import (
 	"context"
-	"net"
+	"math"
+	"time"
 
-	"google.golang.org/grpc"
-
-	"github.com/Raphy42/weekend/grpc/api"
+	"github.com/Raphy42/weekend/core/kernel"
+	"github.com/Raphy42/weekend/core/scheduler"
 )
 
-type TestServer struct {
-	running map[string]interface{}
-}
-
-func (t TestServer) Schedule(ctx context.Context, request *api.ScheduleRequest) (*api.Task, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (t TestServer) Cancel(ctx context.Context, request *api.IdRequest) (*api.Task, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (t TestServer) Info(ctx context.Context, request *api.IdRequest) (*api.Task, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
 func main() {
-	listener, err := net.Listen("tcp", "localhost:25000")
-	if err != nil {
-		panic(err)
-	}
+	root := context.Background()
+	ctx, cancel := context.WithTimeout(root, time.Second*15)
+	defer cancel()
 
-	server := grpc.NewServer()
-	api.RegisterScheduleServiceServer(server, &TestServer{})
+	system := scheduler.NewSystem(
+		kernel.Task("test", func(ctx context.Context, args interface{}) (interface{}, error) {
+			return true, nil
+		}),
+		kernel.Task("foobar", func(ctx context.Context, args interface{}) (interface{}, error) {
+			t := time.NewTicker(5 * time.Second)
+			select {
+			case <-ctx.Done():
+				return nil, ctx.Err()
+			case <-t.C:
+				return nil, nil
+			}
+		}),
+	)
 
-	if err := server.Serve(listener); err != nil {
-		panic(err)
+	for i := 0; i < math.MaxInt8; i++ {
+		_, _ = system.Next(ctx, kernel.NewEvent(scheduler.EventRunTask, &scheduler.RunTaskEventPayload{
+			Name:    "test",
+			Payload: nil,
+		}))
+		_, _ = system.Next(ctx, kernel.NewEvent(scheduler.EventRunTask, &scheduler.RunTaskEventPayload{
+			Name:    "foobar",
+			Payload: nil,
+		}))
 	}
+	<-ctx.Done()
 }

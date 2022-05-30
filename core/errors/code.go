@@ -34,6 +34,8 @@ const (
 	DDependency = 0x0900
 	//DSynchro is an error domain related to synchronisation semantics (context, mutex, etc...)
 	DSynchro = 0x0a00
+	//DType is an error domain related to the type system (interface{}, reflection, etc...)
+	DType = 0x0b00
 
 	//ANotFound is an error axiom for missing or not found items
 	ANotFound = 0x0010

@@ -6,7 +6,7 @@ import (
 	"github.com/davecgh/go-spew/spew"
 )
 
-func Print(value interface{}) string {
+func SPrint(value interface{}) string {
 	return spew.Sdump(value)
 }
 
