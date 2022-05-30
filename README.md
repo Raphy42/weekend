@@ -1,3 +1,8 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/Raphy42/weekend.svg)](https://pkg.go.dev/github.com/Raphy42/weekend)
+
+# weekend
+All included golang toolkit (heavy WIP)
+
 # TODO
 ## cmd
 ### node
