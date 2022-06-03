@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/Raphy42/weekend/core/errors"
 )
 
 type dummySystem struct {
@@ -38,7 +36,5 @@ func Test_DI(t *testing.T) {
 	defer cancel()
 
 	container := NewContainer("test")
-	a.Panics(func() {
-		errors.Must(container.Use(testModule).Start(testCtx))
-	})
+	a.Error(container.Use(testModule).Start(testCtx))
 }

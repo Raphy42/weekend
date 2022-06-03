@@ -1,17 +1,19 @@
 package bitmask
 
-func Set(b, flag int16) int16 {
+import "github.com/Raphy42/weekend/core/kind"
+
+func Set[B kind.Bit](b, flag B) B {
 	return b | flag
 }
 
-func Clear(b, flag int16) int16 {
+func Clear[B kind.Bit](b, flag B) B {
 	return b &^ flag
 }
 
-func Toggle(b, flag int16) int16 {
+func Toggle[B kind.Bit](b, flag B) B {
 	return b ^ flag
 }
 
-func Has(b, flag int16) bool {
+func Has[B kind.Bit](b, flag B) bool {
 	return b&flag != 0
 }

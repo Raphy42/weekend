@@ -61,7 +61,7 @@ func Mustf(err error, format string, args ...interface{}) {
 	}
 	diag := Diagnostic(err)
 	log := logger.New(logger.SkipCallFrame(1))
-	log.Fatal(fmt.Sprintf(format, args), zap.Error(err), zap.Stringer("errors.diagnostic", diag))
+	log.Fatal(fmt.Sprintf(format, args...), zap.Error(err), zap.Stringer("errors.diagnostic", diag))
 }
 
 func Must(err error) {

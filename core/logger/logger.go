@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"runtime"
 	"sync"
 
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/Raphy42/weekend/core/runtime"
 )
 
 const (
@@ -55,17 +56,16 @@ func init() {
 
 var globalLoggerInstance = &globalLogger{}
 
-func New(opts ...LoggerOption) *zap.Logger {
+func New(opts ...Option) *zap.Logger {
 	options := newLoggerOptions()
 	options.apply(opts...)
 
-	callerPtr, _, _, _ := runtime.Caller(options.SkipCallFrame)
-	caller := runtime.FuncForPC(callerPtr)
+	caller := runtime.CallerName(options.SkipCallFrame)
 
 	globalLoggerInstance.RLock()
 	defer globalLoggerInstance.RUnlock()
 
-	name := caller.Name()
+	name := caller
 	if options.Name != "" {
 		name = options.Name
 	}
@@ -73,8 +73,8 @@ func New(opts ...LoggerOption) *zap.Logger {
 	return globalLoggerInstance.logger.Named(name)
 }
 
-func ctxDecorator(ctx context.Context) []LoggerOption {
-	opts := make([]LoggerOption, 0)
+func ctxDecorator(ctx context.Context) []Option {
+	opts := make([]Option, 0)
 	deadline, ok := ctx.Deadline()
 	if ok {
 		opts = append(opts,
@@ -89,7 +89,7 @@ func ctxDecorator(ctx context.Context) []LoggerOption {
 	return opts
 }
 
-func FromContext(ctx context.Context, opts ...LoggerOption) *zap.Logger {
+func FromContext(ctx context.Context, opts ...Option) *zap.Logger {
 	//todo context aware metadata retrieval
 	// - http
 	// - business

@@ -2,22 +2,22 @@ package backoff
 
 import (
 	"context"
+	"sync"
 	"time"
-
-	"go.uber.org/atomic"
 )
 
 type Linear struct {
+	sync.RWMutex
 	initialInterval time.Duration
-	counter         *atomic.Int64
-	currentInterval *atomic.Duration
+	counter         int64
+	currentInterval time.Duration
 }
 
 func NewLinear(interval time.Duration) *Linear {
 	return &Linear{
 		initialInterval: interval,
-		counter:         atomic.NewInt64(0),
-		currentInterval: atomic.NewDuration(interval),
+		counter:         0,
+		currentInterval: interval,
 	}
 }
 
@@ -25,16 +25,20 @@ func (l *Linear) Interval(ctx context.Context) <-chan time.Time {
 	timer := make(chan time.Time, 1)
 	go func() {
 		for {
+			l.RLock()
+			currentInterval := l.currentInterval
+			l.RUnlock()
 			select {
 			case <-ctx.Done():
 				close(timer)
 				return
-			case t := <-time.After(l.currentInterval.Load()):
-				//todo remove races conditions and maybe use RWLock instead of double atomic (needs semaphore for perfect sync)
+			case t := <-time.After(currentInterval):
+				l.Lock()
 				timer <- t
-				value := l.counter.Inc()
-				newDuration := time.Duration(value) * l.initialInterval
-				l.currentInterval.Store(newDuration)
+				l.counter += 1
+				newDuration := time.Duration(l.counter) * l.initialInterval
+				l.currentInterval = newDuration
+				l.Unlock()
 			}
 		}
 	}()
@@ -42,5 +46,7 @@ func (l *Linear) Interval(ctx context.Context) <-chan time.Time {
 }
 
 func (l *Linear) Reset() {
-	l.counter.Store(0)
+	l.Lock()
+	defer l.Unlock()
+	l.counter = 0
 }

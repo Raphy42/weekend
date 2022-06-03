@@ -38,8 +38,8 @@ func (c *Container) startProviders(ctx context.Context, providers []interface{})
 			if dig.CanVisualizeError(err) {
 				// error is related to dig's DAG construction
 				// we assume it is a missing dependency but it's a bit hacky
-				// todo check if dig exposes it's error mechanism
-				// todo expose dig's DAG dotviz visualisation
+				// todo: check if dig exposes it's error mechanism
+				// todo: expose dig's DAG dotviz visualisation
 				return stacktrace.PropagateWithCode(
 					err,
 					EDependencyMissing,

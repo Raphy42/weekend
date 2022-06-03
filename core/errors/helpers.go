@@ -39,3 +39,7 @@ func HasFlag(err error, flag int16) bool {
 	}
 	return false
 }
+
+func T() error {
+	return stacktrace.NewError("DUMMY ERROR MY ONLY PURPOSE IS TYPING DO NOT USE ME")
+}
