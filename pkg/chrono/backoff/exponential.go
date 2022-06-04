@@ -6,7 +6,8 @@ import (
 
 	"go.uber.org/atomic"
 
-	"github.com/Raphy42/weekend/core/slice"
+	"github.com/Raphy42/weekend/pkg/channel"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 var (
@@ -68,7 +69,7 @@ func (e *Exponential) Time(ctx context.Context) <-chan time.Time {
 				close(timer)
 				return
 			case t := <-time.After(e.nextInterval()):
-				timer <- t
+				_ = channel.Send(ctx, t, timer)
 			}
 		}
 	}()

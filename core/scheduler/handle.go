@@ -2,21 +2,21 @@ package scheduler
 
 import (
 	"context"
+	"fmt"
 
-	"github.com/google/uuid"
-	"go.uber.org/zap"
+	"github.com/rs/xid"
 
-	"github.com/Raphy42/weekend/core/logger"
+	"github.com/Raphy42/weekend/core/scheduler/schedulable"
 )
 
 type Handle struct {
 	*Context
-	ID     uuid.UUID
+	ID     xid.ID
 	result <-chan interface{}
 	error  <-chan error
 }
 
-func NewHandle(ctx context.Context, parent uuid.UUID) (*Handle, chan<- interface{}, chan<- error) {
+func NewHandle(ctx context.Context, parent xid.ID) (*Handle, chan<- interface{}, chan<- error) {
 	switch v := ctx.(type) {
 	case Context:
 		parent = v.Parent
@@ -26,28 +26,23 @@ func NewHandle(ctx context.Context, parent uuid.UUID) (*Handle, chan<- interface
 	err := make(chan error)
 	return &Handle{
 		Context: NewContext(ctx, parent),
-		ID:      uuid.New(),
+		ID:      xid.New(),
 		result:  result,
 		error:   err,
 	}, result, err
 }
 
 func (h Handle) Poll(ctx context.Context) (interface{}, error) {
-	log := logger.FromContext(ctx).With(zap.Stringer("wk.handle.id", h.ID))
-	log.Debug("polling started")
-	complete := func() {
-		log.Debug("polling complete")
-	}
-
 	select {
 	case <-ctx.Done():
-		log.Debug("polling cancelled")
 		return nil, ctx.Err()
 	case err := <-h.error:
-		defer complete()
 		return nil, err
 	case result := <-h.result:
-		defer complete()
 		return result, nil
 	}
+}
+
+func (h *Handle) Manifest() schedulable.Manifest {
+	return schedulable.Make(fmt.Sprintf("handle.%s", h.ID), h.Poll)
 }

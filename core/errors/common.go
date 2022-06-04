@@ -5,7 +5,7 @@ import (
 
 	"github.com/palantir/stacktrace"
 
-	"github.com/Raphy42/weekend/core/reflect"
+	"github.com/Raphy42/weekend/pkg/reflect"
 )
 
 var (

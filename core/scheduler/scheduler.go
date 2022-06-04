@@ -4,25 +4,26 @@ import (
 	"context"
 	"sync"
 
-	"github.com/google/uuid"
 	"github.com/palantir/stacktrace"
+	"github.com/rs/xid"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/logger"
+	"github.com/Raphy42/weekend/core/message"
+	"github.com/Raphy42/weekend/core/scheduler/schedulable"
 )
 
 type Scheduler struct {
 	sync.RWMutex
-	running map[uuid.UUID]*Handle
+	id  xid.ID
+	bus message.Bus
 }
 
-func New() *Scheduler {
-	return &Scheduler{
-		running: make(map[uuid.UUID]*Handle),
-	}
+func New(bus message.Bus) *Scheduler {
+	return &Scheduler{bus: bus, id: xid.New()}
 }
 
-func Schedule(ctx context.Context, manifest Manifest, args interface{}) (*Handle, error) {
+func Schedule(ctx context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
 	switch v := ctx.(type) {
 	case *Context:
 		if v == nil {
@@ -39,8 +40,8 @@ func Schedule(ctx context.Context, manifest Manifest, args interface{}) (*Handle
 	}
 }
 
-func (s *Scheduler) Schedule(parent context.Context, manifest Manifest, args interface{}) (*Handle, error) {
-	handle, resultChan, errChan := NewHandle(parent, manifest.ID)
+func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
+	handle, resultChan, errChan := NewHandle(parent, s.id)
 	log := logger.FromContext(parent).With(
 		zap.Stringer("wk.sched.id", handle.ID),
 		zap.String("wk.sched.name", manifest.Name),
@@ -53,13 +54,15 @@ func (s *Scheduler) Schedule(parent context.Context, manifest Manifest, args int
 	defer s.Unlock()
 
 	log.Debug("scheduling function")
-	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f SchedulableFn, in interface{}) {
+	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, handle.ID, handle.Parent))
+	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f schedulable.Fn, in interface{}, bus message.Bus) {
 		defer func() {
 			_ = log.Sync()
 		}()
 
 		result, err := f(ctx, in)
 		if err != nil {
+			_ = bus.Emit(ctx, NewFailureMessage(handle.ID, err))
 			select {
 			case <-ctx.Done():
 				log.Error("unexpected context termination, error was lost", zap.Error(err))
@@ -68,6 +71,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest Manifest, args int
 				return
 			}
 		} else {
+			_ = bus.Emit(ctx, NewSuccessMessage(handle.ID))
 			select {
 			case <-ctx.Done():
 				log.Error("unexpected context termination, result was lost", zap.Any("result", result))
@@ -76,8 +80,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest Manifest, args int
 				return
 			}
 		}
-	}(handle.Context, resultChan, errChan, manifest.Fn, args)
-	s.running[handle.ID] = handle
+	}(handle.Context, resultChan, errChan, manifest.Fn, args, s.bus)
 
 	return handle, nil
 }

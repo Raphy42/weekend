@@ -10,7 +10,7 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/Raphy42/weekend/core/runtime"
+	"github.com/Raphy42/weekend/pkg/runtime"
 )
 
 const (

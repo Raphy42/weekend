@@ -1,6 +1,8 @@
 package bitmask
 
-import "github.com/Raphy42/weekend/core/kind"
+import (
+	"github.com/Raphy42/weekend/pkg/kind"
+)
 
 func Set[B kind.Bit](b, flag B) B {
 	return b | flag

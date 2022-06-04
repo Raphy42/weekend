@@ -6,5 +6,4 @@ const (
 	RetryNever RetryPolicy = iota
 	RetryAlways
 	RetryConstant
-	RetryPredicate
 )

@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"time"
+
+	"github.com/Raphy42/weekend/pkg/channel"
 )
 
 type Linear struct {
@@ -34,7 +36,7 @@ func (l *Linear) Interval(ctx context.Context) <-chan time.Time {
 				return
 			case t := <-time.After(currentInterval):
 				l.Lock()
-				timer <- t
+				_ = channel.Send(ctx, t, timer)
 				l.counter += 1
 				newDuration := time.Duration(l.counter) * l.initialInterval
 				l.currentInterval = newDuration

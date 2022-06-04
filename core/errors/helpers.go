@@ -5,8 +5,8 @@ import (
 
 	"github.com/palantir/stacktrace"
 
-	"github.com/Raphy42/weekend/core/bitmask"
-	"github.com/Raphy42/weekend/core/reflect"
+	"github.com/Raphy42/weekend/pkg/bitmask"
+	"github.com/Raphy42/weekend/pkg/reflect"
 )
 
 //All executes a list of `func() error` and stops at the first non-nil error encountered

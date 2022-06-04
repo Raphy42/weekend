@@ -2,31 +2,26 @@ package main
 
 import (
 	"context"
-	"time"
 
-	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/core/kernel/scheduler"
+	"github.com/Raphy42/weekend/core/app"
+	"github.com/Raphy42/weekend/modules/platform"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 func main() {
-	complexFn := scheduler.Make("capitalize", func(ctx context.Context, args interface{}) (interface{}, error) {
-		time.Sleep(time.Second * 2)
-		return "foobar", nil
-	})
-	fn := scheduler.Make("pipeline", func(ctx context.Context, args interface{}) error {
-		handle, err := scheduler.Schedule(ctx, complexFn, args)
-		if err != nil {
-			return err
-		}
-		_, err = handle.Poll(ctx)
-		return err
-	})
+	modules := slice.New(
+		platform.Module(),
+	)
 
-	sched := scheduler.New()
-	handle, err := sched.Schedule(context.Background(), fn, nil)
-	errors.Must(err)
+	sdk, err := app.New("test",
+		app.WithModules(modules...),
+	)
+	if err != nil {
+		panic(err)
+	}
+	if err := sdk.Start(context.Background()); err != nil {
+		panic(err)
+	}
 
-	_, err = handle.Poll(context.Background())
-	errors.Must(err)
-
+	<-sdk.Wait()
 }

@@ -2,13 +2,15 @@ package di
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/palantir/stacktrace"
 	"go.uber.org/dig"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/logger"
-	"github.com/Raphy42/weekend/core/reflect"
+	"github.com/Raphy42/weekend/core/scheduler/schedulable"
+	"github.com/Raphy42/weekend/pkg/reflect"
 )
 
 type Container struct {
@@ -95,6 +97,11 @@ func (c *Container) startChildren(ctx context.Context) error {
 		zap.Int("di.invocations", len(invocations)),
 	)
 
+	// inject parent context in dependency DAG
+	exports = append(exports, func() context.Context {
+		return ctx
+	})
+
 	// todo handle and inject lifecycles
 
 	if err := c.startProviders(ctx, exports); err != nil {
@@ -110,6 +117,13 @@ func (c *Container) startChildren(ctx context.Context) error {
 	return nil
 }
 
-func (c *Container) Start(ctx context.Context) error {
+func (c *Container) start(ctx context.Context) error {
 	return c.startChildren(ctx)
+}
+
+func (c *Container) Manifest() schedulable.Manifest {
+	return schedulable.Make(
+		fmt.Sprintf("container.%s", c.name),
+		c.start,
+	)
 }
