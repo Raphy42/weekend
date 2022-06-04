@@ -4,7 +4,6 @@ go 1.18
 
 require (
 	github.com/fatih/structtag v1.2.0
-	github.com/google/uuid v1.1.2
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
 	github.com/rs/xid v1.4.0
 	github.com/stretchr/testify v1.7.0
