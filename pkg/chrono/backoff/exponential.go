@@ -5,7 +5,9 @@ import (
 	"time"
 
 	"go.uber.org/atomic"
+	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/channel"
 	"github.com/Raphy42/weekend/pkg/slice"
 )
@@ -60,16 +62,14 @@ func (e *Exponential) nextInterval() time.Duration {
 	return e.initialInterval
 }
 
-func (e *Exponential) Time(ctx context.Context) <-chan time.Time {
-	timer := make(chan time.Time, 1)
+func (e *Exponential) Duration(ctx context.Context) <-chan time.Duration {
+	timer := make(chan time.Duration)
 	go func() {
 		for {
-			select {
-			case <-ctx.Done():
-				close(timer)
+			if err := channel.Send(ctx, e.nextInterval(), timer); err != nil {
+				log := logger.FromContext(ctx)
+				log.Error("could not dispatch next backoff interval", zap.Error(err))
 				return
-			case t := <-time.After(e.nextInterval()):
-				_ = channel.Send(ctx, t, timer)
 			}
 		}
 	}()

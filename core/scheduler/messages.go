@@ -6,16 +6,13 @@ import (
 	"github.com/Raphy42/weekend/core/message"
 )
 
+// scheduler specifics
 const (
-	MSchedule           = "wk.scheduler.schedule"
-	MScheduled          = "wk.scheduler#scheduled"
-	MProgress           = "wk.scheduler#progress"
-	MSuccess            = "wk.scheduler#success"
-	MFailure            = "wk.scheduler#failure"
-	MSupervise          = "wk.supervisor.supervise"
-	MSupervised         = "wk.supervisor#scheduled"
-	MSupervisionFailed  = "wk.supervisor#failed"
-	MSupervisionSuccess = "wk.supervisor#success"
+	MSchedule  = "wk.scheduler.schedule"
+	MScheduled = "wk.scheduler#scheduled"
+	MProgress  = "wk.scheduler#progress"
+	MSuccess   = "wk.scheduler#success"
+	MFailure   = "wk.scheduler#failure"
 )
 
 type ScheduleMessagePayload struct {
@@ -69,56 +66,4 @@ func NewFailureMessage(id xid.ID, err error) message.Message {
 
 type SuperviseMessagePayload struct {
 	ScheduleMessagePayload
-}
-
-func NewSuperviseMessage(name string, args interface{}) message.Message {
-	return message.New(MSupervise, &SuperviseMessagePayload{ScheduleMessagePayload{
-		Name: name,
-		Args: args,
-	}})
-}
-
-type SupervisedMessagePayload struct {
-	ScheduledMessagePayload
-	SupervisorID xid.ID
-}
-
-func NewSupervisedMessage(name string, id, parent, supervisorID xid.ID) message.Message {
-	return message.New(MSupervised, &SupervisedMessagePayload{
-		ScheduledMessagePayload: ScheduledMessagePayload{
-			Name:     name,
-			ID:       id,
-			ParentID: parent,
-		},
-		SupervisorID: supervisorID,
-	})
-}
-
-type SupervisionSuccessMessagePayload struct {
-	SuccessMessagePayload
-	SupervisorID xid.ID
-}
-
-func NewSupervisionSuccessMessage(id, supervisorID xid.ID) message.Message {
-	return message.New(MSupervisionSuccess, &SupervisionSuccessMessagePayload{
-		SuccessMessagePayload: SuccessMessagePayload{
-			ID: id,
-		},
-		SupervisorID: supervisorID,
-	})
-}
-
-type SupervisionFailureMessagePayload struct {
-	FailureMessagePayload
-	SupervisorID xid.ID
-}
-
-func NewSupervisionFailureMessage(id, supervisorID xid.ID, err error) message.Message {
-	return message.New(MSupervisionFailed, &SupervisionFailureMessagePayload{
-		FailureMessagePayload: FailureMessagePayload{
-			ID:     id,
-			Reason: err.Error(),
-		},
-		SupervisorID: supervisorID,
-	})
 }

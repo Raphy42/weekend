@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package bus;
+
+message Message {
+  string id = 1;
+  string kind = 10;
+  bytes payload = 11;
+  string payloadMimeType = 20;
+}
+
+message MessageTopics {
+  repeated string kinds = 10;
+}
+
+message MessageAck {
+  string id = 1;
+}
+
+service Bus {
+  rpc Emit(Message) returns (MessageAck) {}
+  rpc EmitStream(stream Message) returns (stream MessageAck) {}
+  rpc Subscribe(MessageTopics) returns (stream Message) {}
+}

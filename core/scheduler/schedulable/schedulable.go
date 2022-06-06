@@ -8,24 +8,26 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/Raphy42/weekend/core/errors"
+	"github.com/Raphy42/weekend/core/scheduler/policies"
 )
 
 type Schedulable interface {
 	func() |
-		func() error |
-		func(ctx context.Context) |
-		func(ctx context.Context) error |
-		func(ctx context.Context) (interface{}, error) |
-		func(ctx context.Context, args interface{}) |
-		func(ctx context.Context, args interface{}) error |
-		func(ctx context.Context, args interface{}) (interface{}, error)
+	func() error |
+	func(ctx context.Context) |
+	func(ctx context.Context) error |
+	func(ctx context.Context) (interface{}, error) |
+	func(ctx context.Context, args interface{}) |
+	func(ctx context.Context, args interface{}) error |
+	func(ctx context.Context, args interface{}) (interface{}, error)
 }
 
 type Fn func(ctx context.Context, args interface{}) (interface{}, error)
 type Manifest struct {
-	Name string
-	ID   xid.ID
-	Fn   Fn
+	Name   string
+	ID     xid.ID
+	Fn     Fn
+	Policy policies.Policy
 }
 
 // oooooooh this is dirty
@@ -69,10 +71,16 @@ func makeImpl[S Schedulable](schedulable S) Fn {
 	}
 }
 
-func Make[S Schedulable](name string, schedulable S) Manifest {
+func Make[S Schedulable](name string, schedulable S, pols ...policies.Policy) Manifest {
+	policy := policies.Default()
+	if len(pols) != 0 {
+		policy = pols[0]
+	}
+
 	return Manifest{
-		Name: name,
-		Fn:   makeImpl(schedulable),
-		ID:   xid.New(),
+		Name:   name,
+		Fn:     makeImpl(schedulable),
+		ID:     xid.New(),
+		Policy: policy,
 	}
 }

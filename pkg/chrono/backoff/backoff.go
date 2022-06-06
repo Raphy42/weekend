@@ -6,6 +6,6 @@ import (
 )
 
 type Backoff interface {
-	Time(ctx context.Context) <-chan time.Time
+	Duration(ctx context.Context) <-chan time.Duration
 	Reset()
 }

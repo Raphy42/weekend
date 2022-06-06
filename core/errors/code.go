@@ -66,7 +66,8 @@ func init() {
 		RegisterDomain(DUser, "user").
 		RegisterDomain(DEncoding, "encoding").
 		RegisterDomain(DDependency, "dependency").
-		RegisterDomain(DSynchro, "sync")
+		RegisterDomain(DSynchro, "sync").
+		RegisterDomain(DType, "type")
 	globalRegistry.
 		RegisterAxiom(ANotFound, "not_found").
 		RegisterAxiom(AMalformed, "malformed").

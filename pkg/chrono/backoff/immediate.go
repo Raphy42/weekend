@@ -11,15 +11,15 @@ func NewImmediate() *Immediate {
 	return &Immediate{}
 }
 
-func (i Immediate) Time(ctx context.Context) <-chan time.Time {
-	timer := make(chan time.Time, 1)
+func (i Immediate) Duration(ctx context.Context) <-chan time.Duration {
+	timer := make(chan time.Duration)
 	go func() {
 		for {
 			select {
 			case <-ctx.Done():
 				close(timer)
 				return
-			case timer <- time.Now():
+			case timer <- 0:
 				// select is here used as a non-blocking dispatch
 			}
 		}
