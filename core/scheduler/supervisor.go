@@ -24,7 +24,7 @@ func NewSupervisor() *Supervisor {
 
 func (s Supervisor) retry(ctx context.Context, manifest schedulable.Manifest, args interface{}, policy policies.Policy, err error) (interface{}, error) {
 	code := stacktrace.GetCode(err)
-	if errors.IsPersistentCode(int16(code)) {
+	if errors.IsPersistentCode(uint16(code)) {
 		return nil, stacktrace.PropagateWithCode(err, ENoMoreRetry, "non transient error encountered")
 	}
 

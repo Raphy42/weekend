@@ -90,38 +90,38 @@ func init() {
 //     |    domain code (resource, service, io, etc...)
 //	   kind code (transient, persistent)
 
-func ResourceNotFound(bit int16) int16 {
+func ResourceNotFound(bit uint16) uint16 {
 	return bitmask.Set(bit, ANotFound)
 }
 
-func Transient(bit int16) int16 {
+func Transient(bit uint16) uint16 {
 	return bitmask.Clear(bit, KTransient)
 }
 
-func Persistent(bit int16) int16 {
+func Persistent(bit uint16) uint16 {
 	return bitmask.Set(bit, KPersistent)
 }
 
-func IsPersistentCode(bit int16) bool {
+func IsPersistentCode(bit uint16) bool {
 	return bitmask.Has(bit, KPersistent)
 }
 
-func IsTransientCode(bit int16) bool {
+func IsTransientCode(bit uint16) bool {
 	return !IsPersistentCode(bit)
 }
 
-func Code(kind, ns, axiom int16) stacktrace.ErrorCode {
+func Code(kind, ns, axiom uint16) stacktrace.ErrorCode {
 	return stacktrace.ErrorCode(bitmask.Set(kind, bitmask.Set(ns, axiom)))
 }
 
-func PersistentCode(ns, axiom int16) stacktrace.ErrorCode {
+func PersistentCode(ns, axiom uint16) stacktrace.ErrorCode {
 	return stacktrace.ErrorCode(bitmask.Set(KPersistent, bitmask.Set(ns, axiom)))
 }
 
-func TransientCode(ns, axiom int16) stacktrace.ErrorCode {
+func TransientCode(ns, axiom uint16) stacktrace.ErrorCode {
 	return stacktrace.ErrorCode(bitmask.Set(KTransient, bitmask.Set(ns, axiom)))
 }
 
-func IsNotFoundCode(bit int16) bool {
+func IsNotFoundCode(bit uint16) bool {
 	return bitmask.Has(bit, ANotFound)
 }

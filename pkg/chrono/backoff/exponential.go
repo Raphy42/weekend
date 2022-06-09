@@ -9,7 +9,6 @@ import (
 
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/channel"
-	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 var (
@@ -30,7 +29,7 @@ type Exponential struct {
 }
 
 func NewExponentialBackoff(interval time.Duration) *Exponential {
-	sequence := slice.Map(fibonacciSequence, func(idx int, in int64, eOut *[]time.Duration) {
+	sequence := std.Map(fibonacciSequence, func(idx int, in int64, eOut *[]time.Duration) {
 		(*eOut)[idx] = time.Duration(in) * interval
 	})
 	return &Exponential{

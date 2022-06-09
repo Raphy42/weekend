@@ -10,6 +10,10 @@ import (
 	"github.com/Raphy42/weekend/core/logger"
 )
 
+const (
+	ModuleName = "wk.platform"
+)
+
 func platformInformation(ctx context.Context) {
 	log := logger.FromContext(ctx)
 
@@ -23,7 +27,7 @@ func platformInformation(ctx context.Context) {
 
 func Module() di.Module {
 	return di.Declare(
-		"wk.platform",
+		ModuleName,
 		di.Invoke(platformInformation),
 	)
 }

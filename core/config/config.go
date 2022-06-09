@@ -9,19 +9,24 @@ import (
 	"github.com/Raphy42/weekend/core/errors"
 )
 
+const (
+	confAll = "."
+)
+
 type Configurable interface {
 	Refresh(ctx context.Context) error
+	Merge(ctx context.Context, configurable Configurable) (Configurable, error)
 	Get(ctx context.Context, key string) (interface{}, error)
 }
 
-type Facade interface {
-	Bool(ctx context.Context, key string, defaultTo ...bool) (bool, error)
-	String(ctx context.Context, key string, defaultTo ...string) (string, error)
-	Strings(ctx context.Context, key string, defaultTo ...[]string) ([]string, error)
-	Bytes(ctx context.Context, key string, defaultTo ...[]byte) ([]byte, error)
-	Number(ctx context.Context, key string, defaultTo ...float64) (float64, error)
-	URL(ctx context.Context, key string, defaultTo ...*url.URL) (*url.URL, error)
-}
+//type Facade interface {
+//	Bool(ctx context.Context, key string, defaultTo ...bool) (bool, error)
+//	String(ctx context.Context, key string, defaultTo ...string) (string, error)
+//	Strings(ctx context.Context, key string, defaultTo ...[]string) ([]string, error)
+//	Bytes(ctx context.Context, key string, defaultTo ...[]byte) ([]byte, error)
+//	Number(ctx context.Context, key string, defaultTo ...float64) (float64, error)
+//	URL(ctx context.Context, key string, defaultTo ...*url.URL) (*url.URL, error)
+//}
 
 type Config struct {
 	Configurable

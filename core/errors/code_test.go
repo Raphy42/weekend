@@ -7,11 +7,11 @@ import (
 )
 
 var (
-	persistentTestError int16 = 0x7000
-	transientTestError  int16 = 0x0000
+	persistentTestError uint16 = 0x7000
+	transientTestError  uint16 = 0x0000
 
-	serviceFooUnreachable = int16(Code(KTransient, DService, AUnreachable))
-	resourceBarNotFound   = int16(Code(KPersistent, DResource, ANotFound))
+	serviceFooUnreachable = uint16(Code(KTransient, DService, AUnreachable))
+	resourceBarNotFound   = uint16(Code(KPersistent, DResource, ANotFound))
 )
 
 func TestIsPersistent(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	resourceFooNotFound        = int16(PersistentCode(DResource, ANotFound))
+	resourceFooNotFound        = uint16(PersistentCode(DResource, ANotFound))
 	resourceNotFoundDiagnostic = DiagnosticManifest{
 		Transient: false,
 		Domain:    "resource",

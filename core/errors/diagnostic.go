@@ -2,7 +2,6 @@ package errors
 
 import (
 	"fmt"
-	"math"
 
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
@@ -15,9 +14,13 @@ type DiagnosticManifest struct {
 	Domain    string
 	Axiom     string
 	Error     error
+	external  bool
 }
 
 func (d DiagnosticManifest) String() string {
+	if d.external {
+		return "external"
+	}
 	kind := "persistent"
 	if d.Transient {
 		kind = "transient"
@@ -31,14 +34,16 @@ func noDiagnostic(err error) DiagnosticManifest {
 		Domain:    "unknown",
 		Axiom:     "unknown",
 		Error:     err,
+		external:  true,
 	}
 }
 
 func Diagnostic(err error) DiagnosticManifest {
-	code := int16(stacktrace.GetCode(err))
-	if code == math.MaxInt16 {
+	c := stacktrace.GetCode(err)
+	if c == stacktrace.NoCode {
 		return noDiagnostic(err)
 	}
+	code := uint16(c)
 
 	transient := IsTransientCode(code)
 	domainCode := code & 0x0f00

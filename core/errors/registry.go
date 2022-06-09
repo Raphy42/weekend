@@ -4,24 +4,24 @@ import "sync"
 
 type Registry struct {
 	sync.RWMutex
-	domains map[int16]string
-	axioms  map[int16]string
+	domains map[uint16]string
+	axioms  map[uint16]string
 }
 
 var globalRegistry = &Registry{
-	domains: make(map[int16]string),
-	axioms:  make(map[int16]string),
+	domains: make(map[uint16]string),
+	axioms:  make(map[uint16]string),
 }
 
-func RegisterDomain(flag int16, name string) {
+func RegisterDomain(flag uint16, name string) {
 	globalRegistry.RegisterDomain(flag, name)
 }
 
-func RegisterAxiom(flag int16, name string) {
+func RegisterAxiom(flag uint16, name string) {
 	globalRegistry.RegisterAxiom(flag, name)
 }
 
-func (r *Registry) RegisterDomain(flag int16, name string) *Registry {
+func (r *Registry) RegisterDomain(flag uint16, name string) *Registry {
 	r.Lock()
 	defer r.Unlock()
 
@@ -29,7 +29,7 @@ func (r *Registry) RegisterDomain(flag int16, name string) *Registry {
 	return r
 }
 
-func (r *Registry) RegisterAxiom(flag int16, name string) *Registry {
+func (r *Registry) RegisterAxiom(flag uint16, name string) *Registry {
 	r.Lock()
 	defer r.Unlock()
 
@@ -37,7 +37,7 @@ func (r *Registry) RegisterAxiom(flag int16, name string) *Registry {
 	return r
 }
 
-func (r *Registry) Domain(code int16) string {
+func (r *Registry) Domain(code uint16) string {
 	r.RLock()
 	defer r.RUnlock()
 
@@ -48,7 +48,7 @@ func (r *Registry) Domain(code int16) string {
 	return domain
 }
 
-func (r *Registry) Axiom(code int16) string {
+func (r *Registry) Axiom(code uint16) string {
 	r.Lock()
 	defer r.Unlock()
 

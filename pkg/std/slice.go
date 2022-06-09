@@ -1,6 +1,6 @@
-package slice
+package std
 
-func New[T any](items ...T) []T {
+func NewSlice[T any](items ...T) []T {
 	return items
 }
 

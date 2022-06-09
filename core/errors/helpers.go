@@ -33,9 +33,9 @@ func AllCtx(ctx context.Context, fns ...func(ctx context.Context) error) error {
 	return nil
 }
 
-func HasFlag(err error, flag int16) bool {
+func HasFlag(err error, flag uint16) bool {
 	if v := stacktrace.GetCode(err); v != stacktrace.NoCode {
-		return bitmask.Has(int16(v), flag)
+		return bitmask.Has(uint16(v), flag)
 	}
 	return false
 }

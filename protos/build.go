@@ -1,3 +1,6 @@
 package protos
 
-//go:generate go run generator.go .
+// This file is only an entrypoint for `go generate`
+// When triggered all protocol buffer definitions in the same folder as this file will be compiled with protoc
+
+//go:generate make all

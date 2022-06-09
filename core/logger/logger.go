@@ -29,14 +29,14 @@ type globalLogger struct {
 }
 
 func init() {
-	logmode := os.Getenv("WEEKEND_LOG_MODE")
-	if logmode == "" {
-		logmode = "DEV"
+	logMode := os.Getenv("WEEKEND_LOG_MODE")
+	if logMode == "" {
+		logMode = "DEV"
 	}
 	var logger *zap.Logger
 	var err error
 
-	switch logmode {
+	switch logMode {
 	case "DEV":
 		logger, err = zap.NewDevelopment()
 	case "PROD":
@@ -48,13 +48,8 @@ func init() {
 		panic(stacktrace.Propagate(err, "unable to initialise root logger"))
 	}
 
-	globalLoggerInstance.Lock()
-	defer globalLoggerInstance.Unlock()
-
-	globalLoggerInstance.logger = logger
+	zap.ReplaceGlobals(logger)
 }
-
-var globalLoggerInstance = &globalLogger{}
 
 func New(opts ...Option) *zap.Logger {
 	options := newLoggerOptions()
@@ -62,15 +57,12 @@ func New(opts ...Option) *zap.Logger {
 
 	caller := runtime.CallerName(options.SkipCallFrame)
 
-	globalLoggerInstance.RLock()
-	defer globalLoggerInstance.RUnlock()
-
 	name := caller
 	if options.Name != "" {
 		name = options.Name
 	}
 
-	return globalLoggerInstance.logger.Named(name)
+	return zap.L().Named(name)
 }
 
 func ctxDecorator(ctx context.Context) []Option {
