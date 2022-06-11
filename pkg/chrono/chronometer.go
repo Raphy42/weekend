@@ -36,7 +36,7 @@ func (c *Chrono) StartContext(ctx context.Context) chan time.Duration {
 
 //StartDeferred starts the chronometer and ends it whenever the returned callback is invoked,
 // returning the duration via a channel
-func (c *Chrono) StartDeferred() (func(), chan time.Duration) {
+func (c *Chrono) StartDeferred() (func(), chan<- time.Duration) {
 	root := context.Background()
 	child, cancel := context.WithCancel(root)
 	return func() {

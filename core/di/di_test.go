@@ -13,7 +13,7 @@ type dummySystem struct {
 }
 
 var testModule = Declare("test.module",
-	Export(func() context.Context {
+	Providers(func() context.Context {
 		return context.Background()
 	}),
 	Invoke(func(d *time.Duration) error {
@@ -22,7 +22,7 @@ var testModule = Declare("test.module",
 	Invoke(func(ctx context.Context, system *dummySystem) error {
 		return nil
 	}),
-	Export(func(ctx context.Context) (*dummySystem, error) {
+	Providers(func(ctx context.Context) (*dummySystem, error) {
 		return &dummySystem{data: 0x1337}, nil
 	}),
 )
@@ -36,5 +36,5 @@ func Test_DI(t *testing.T) {
 	defer cancel()
 
 	container := NewContainer("test")
-	a.Error(container.Use(testModule).Start(testCtx))
+	a.Error(container.Use(testModule).start(testCtx))
 }

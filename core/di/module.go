@@ -8,17 +8,17 @@ import (
 )
 
 type Module struct {
-	Name    string
-	Exports []interface{}
-	Exposes []interface{}
-	Invokes []interface{}
+	Name      string
+	Providers []interface{}
+	Exposes   []interface{}
+	Invokes   []interface{}
 }
 
 type ModuleOption func(module *Module)
 
-func Export(export interface{}) ModuleOption {
+func Providers(exports ...interface{}) ModuleOption {
 	return func(module *Module) {
-		module.Exports = append(module.Exports, export)
+		module.Providers = append(module.Providers, exports...)
 	}
 }
 
@@ -36,10 +36,10 @@ func Invoke(invocation interface{}) ModuleOption {
 
 func Declare(name string, options ...ModuleOption) Module {
 	mod := Module{
-		Name:    name,
-		Exposes: make([]interface{}, 0),
-		Exports: make([]interface{}, 0),
-		Invokes: make([]interface{}, 0),
+		Name:      name,
+		Exposes:   make([]interface{}, 0),
+		Providers: make([]interface{}, 0),
+		Invokes:   make([]interface{}, 0),
 	}
 	for _, opt := range options {
 		opt(&mod)
@@ -57,7 +57,7 @@ func sprint(items []interface{}) string {
 
 func (m Module) Print() string {
 	return fmt.Sprintf(`%s
-Exports: %d
+Providers: %d
 %s
 Exposes: %d
 %s
@@ -65,8 +65,8 @@ Invokes: %d
 %s
 `,
 		m.Name,
-		len(m.Exports),
-		sprint(m.Exports),
+		len(m.Providers),
+		sprint(m.Providers),
 		len(m.Exposes),
 		sprint(m.Exposes),
 		len(m.Invokes),

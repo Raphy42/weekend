@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/pkg/std"
+	"github.com/Raphy42/weekend/pkg/std/set"
 )
 
 type InMemoryConfig struct {
@@ -43,7 +43,7 @@ func (i *InMemoryConfig) Merge(ctx context.Context, configurable Configurable) (
 		return nil, stacktrace.Propagate(err, "underlying config implementation is not mergeable")
 	}
 
-	return NewInMemoryConfig(std.MergeMap(i.Values, mappable)), nil
+	return NewInMemoryConfig(set.Merge(i.Values, mappable)), nil
 }
 
 func (i *InMemoryConfig) Get(ctx context.Context, key string) (interface{}, error) {

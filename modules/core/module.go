@@ -1,4 +1,4 @@
-package platform
+package core
 
 import (
 	"context"
@@ -10,9 +10,17 @@ import (
 	"github.com/Raphy42/weekend/core/logger"
 )
 
-const (
-	ModuleName = "wk.platform"
+var (
+	ModuleName = di.Name("wk", "platform")
 )
+
+func engineBuilderProvider() *EngineBuilder {
+	return newEngineBuilder()
+}
+
+func engineProvider(builder *EngineBuilder) (*Engine, error) {
+	return builder.Build()
+}
 
 func platformInformation(ctx context.Context) {
 	log := logger.FromContext(ctx)
@@ -28,6 +36,10 @@ func platformInformation(ctx context.Context) {
 func Module() di.Module {
 	return di.Declare(
 		ModuleName,
+		di.Providers(
+			engineBuilderProvider,
+			engineProvider,
+		),
 		di.Invoke(platformInformation),
 	)
 }

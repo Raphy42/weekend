@@ -3,13 +3,15 @@ package channel
 import (
 	"context"
 	"sync"
+
+	"github.com/palantir/stacktrace"
 )
 
 //Send reduces boilerplate for blocking unbuffered channels and ensures propagation of context termination
 func Send[T any](ctx context.Context, value T, c chan<- T) error {
 	select {
 	case <-ctx.Done():
-		return ctx.Err()
+		return stacktrace.Propagate(ctx.Err(), "context canceled before value could be dispatched")
 	case c <- value:
 		return nil
 	}

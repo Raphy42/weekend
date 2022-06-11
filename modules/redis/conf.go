@@ -8,7 +8,7 @@ import (
 
 	"github.com/Raphy42/weekend/core/config"
 	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/pkg/std"
+	"github.com/Raphy42/weekend/pkg/std/slice"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	allModes = strings.Join(std.NewSlice(ModeLocal, ModeCluster, ModeSentinel), ",")
+	allModes = strings.Join(slice.NewSlice(ModeLocal, ModeCluster, ModeSentinel), ",")
 )
 
 var (
@@ -69,7 +69,7 @@ func localConfigFrom(ctx context.Context, conf config.Config) (*Configuration, e
 
 	return &Configuration{
 		Mode: ModeLocal,
-		Servers: std.NewSlice(ServerConfiguration{
+		Servers: slice.NewSlice(ServerConfiguration{
 			Addr:     addr,
 			Database: int(database),
 			Password: password,

@@ -44,5 +44,5 @@ func (h Handle) Poll(ctx context.Context) (interface{}, error) {
 }
 
 func (h *Handle) Manifest() schedulable.Manifest {
-	return schedulable.Make(fmt.Sprintf("handle.%s", h.ID), h.Poll)
+	return schedulable.Of(fmt.Sprintf("handle.%s", h.ID), h.Poll)
 }

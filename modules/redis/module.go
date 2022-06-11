@@ -2,8 +2,8 @@ package redis
 
 import "github.com/Raphy42/weekend/core/di"
 
-const (
-	ModuleName = "wk.redis"
+var (
+	ModuleName = di.Name("wk", "redis")
 )
 
 func Module() di.Module {

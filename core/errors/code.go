@@ -36,6 +36,8 @@ const (
 	DSynchro = 0x0a00
 	//DType is an error domain related to the type system (interface{}, reflection, etc...)
 	DType = 0x0b00
+	//DValue is an error domain related to values
+	DValue = 0x0c00
 
 	//ANotFound is an error axiom for missing or not found items
 	ANotFound = 0x0010
@@ -53,6 +55,8 @@ const (
 	AUnreachable = 0x0070
 	//AUnimplemented is an error axiom for missing domain
 	AUnimplemented = 0x0080
+	//ANil is an error axiom for nil values
+	ANil = 0x0090
 )
 
 func init() {
@@ -67,7 +71,8 @@ func init() {
 		RegisterDomain(DEncoding, "encoding").
 		RegisterDomain(DDependency, "dependency").
 		RegisterDomain(DSynchro, "sync").
-		RegisterDomain(DType, "type")
+		RegisterDomain(DType, "type").
+		RegisterDomain(DValue, "value")
 	globalRegistry.
 		RegisterAxiom(ANotFound, "not_found").
 		RegisterAxiom(AMalformed, "malformed").
@@ -76,7 +81,8 @@ func init() {
 		RegisterAxiom(ATooSmall, "too_small").
 		RegisterAxiom(AUnexpected, "unexpected").
 		RegisterAxiom(AUnreachable, "unreachable").
-		RegisterAxiom(AUnimplemented, "unimplemented")
+		RegisterAxiom(AUnimplemented, "unimplemented").
+		RegisterAxiom(ANil, "nil")
 }
 
 // Error code bit structure

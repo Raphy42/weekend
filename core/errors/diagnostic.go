@@ -4,9 +4,6 @@ import (
 	"fmt"
 
 	"github.com/palantir/stacktrace"
-	"go.uber.org/zap"
-
-	"github.com/Raphy42/weekend/core/logger"
 )
 
 type DiagnosticManifest struct {
@@ -58,22 +55,4 @@ func Diagnostic(err error) DiagnosticManifest {
 		Axiom:     axiom,
 		Error:     err,
 	}
-}
-
-func Mustf(err error, format string, args ...interface{}) {
-	if err == nil {
-		return
-	}
-	diag := Diagnostic(err)
-	log := logger.New(logger.SkipCallFrame(1))
-	log.Fatal(fmt.Sprintf(format, args...), zap.Error(err), zap.Stringer("errors.diagnostic", diag))
-}
-
-func Must(err error) {
-	if err == nil {
-		return
-	}
-	diag := Diagnostic(err)
-	log := logger.New(logger.SkipCallFrame(1))
-	log.Fatal("caught unrecoverable error", zap.Error(err), zap.Stringer("errors.diagnostic", diag))
 }

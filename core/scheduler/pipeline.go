@@ -34,7 +34,7 @@ func MakePipeline(name string, hooks Hooks, manifests ...schedulable.Manifest) *
 }
 
 func (p Pipeline) Manifest() schedulable.Manifest {
-	return schedulable.Make(p.Name, func(ctx context.Context, input interface{}) (interface{}, error) {
+	return schedulable.Of(p.Name, func(ctx context.Context, input interface{}) (interface{}, error) {
 		log := logger.FromContext(ctx).With(zap.String("wk.pipeline", p.Name))
 
 		args := input

@@ -9,7 +9,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 
-	"github.com/Raphy42/weekend/core/di"
+	"github.com/Raphy42/weekend/core/dependency"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/scheduler"
@@ -21,14 +21,14 @@ type App struct {
 	lock      sync.RWMutex
 	ctx       context.Context
 	cancel    context.CancelFunc
-	container *di.Container
+	container *dependency.Container
 	scheduler *scheduler.Scheduler
 }
 
 func New(name string, opts ...BuilderOption) (*App, error) {
 	builder := newBuilder(name)
 	if err := builder.Apply(opts...); err != nil {
-		return nil, stacktrace.Propagate(err, "could not build application due to one of applications")
+		return nil, stacktrace.Propagate(err, "could not build application")
 	}
 	return builder.Build()
 }
@@ -52,6 +52,11 @@ func (a *App) Start(rootCtx context.Context) error {
 	a.ctx = ctx
 	a.cancel = cancel
 
+	if err := executeOnStart(); err != nil {
+		return stacktrace.Propagate(err, "global application starting hooks could not be run successfully")
+	}
+	log.Debug("global start hooks ran successfully", zap.Duration("wk.init.duration", timer.Elapsed()))
+
 	handle, err := a.scheduler.Schedule(ctx, a.container.Manifest(), nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "unable to schedule container")
@@ -66,6 +71,12 @@ func (a *App) Start(rootCtx context.Context) error {
 }
 
 func (a *App) Wait() <-chan struct{} {
+	defer func() {
+		if err := executeOnStart(); err != nil {
+			panic(stacktrace.Propagate(err, "global application stopping hooks could not be run successfully"))
+		}
+	}()
+
 	if a.ctx == nil {
 		panic(stacktrace.NewError("application has not been started prior to polling (missing `App.Start`)"))
 	}

@@ -1,4 +1,4 @@
-package std
+package slice
 
 func NewSlice[T any](items ...T) []T {
 	return items
@@ -7,12 +7,25 @@ func NewSlice[T any](items ...T) []T {
 func Map[
 	TIn any,
 	TOut any,
-](slice []TIn, fn func(idx int, in TIn, eOut *[]TOut)) []TOut {
-	out := make([]TOut, len(slice))
-	for idx, item := range slice {
-		fn(idx, item, &out)
-	}
-	return out
+](slice []TIn, fn func(idx int, in TIn) TOut) []TOut {
+	return Fold(slice, func(idx int, current TIn, acc []TOut) []TOut {
+		acc[idx] = fn(idx, current)
+		return acc
+	}, make([]TOut, len(slice)))
+}
+
+func MapErr[
+	TIn any,
+	TOut any,
+](slice []TIn, fn func(idx int, in TIn) (TOut, error)) ([]TOut, error) {
+	return FoldErr(slice, func(idx int, current TIn, acc []TOut) ([]TOut, error) {
+		var err error
+		acc[idx], err = fn(idx, current)
+		if err != nil {
+			return acc, err
+		}
+		return acc, nil
+	}, make([]TOut, len(slice)))
 }
 
 func Filter[
@@ -64,6 +77,21 @@ func Fold[
 		initialValue = accumulator(idx, item, initialValue)
 	}
 	return initialValue
+}
+
+func FoldErr[
+	TIn any,
+	TOut any,
+	A func(idx int, current TIn, acc TOut) (TOut, error),
+](slice []TIn, accumulator A, initialValue TOut) (TOut, error) {
+	var err error
+	for idx, item := range slice {
+		initialValue, err = accumulator(idx, item, initialValue)
+		if err != nil {
+			return initialValue, err
+		}
+	}
+	return initialValue, nil
 }
 
 func Flatten[

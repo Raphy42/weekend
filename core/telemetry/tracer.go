@@ -17,7 +17,7 @@ const (
 	ConfCollectorEndpoint = ".telemetry.endpoint"
 )
 
-func newTracer(ctx context.Context, config config.Config) (*trace.TracerProvider, error) {
+func NewJaegerTracer(ctx context.Context, config config.Config) (*trace.TracerProvider, error) {
 	collectorUrl, err := config.URL(ctx, ConfCollectorEndpoint)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "missing configuration URL entry: '%s'", ConfCollectorEndpoint)
@@ -41,7 +41,6 @@ func newTracer(ctx context.Context, config config.Config) (*trace.TracerProvider
 		trace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(appName),
-
 		)),
 	), nil
 }

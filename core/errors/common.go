@@ -17,6 +17,8 @@ var (
 	EInvalidCast = PersistentCode(DType, AInvariant)
 	//EUnreachable todo
 	EUnreachable = PersistentCode(DLogic, AUnreachable)
+	// ENil todo
+	ENil = PersistentCode(DType, ANil)
 )
 
 func ValidateContext(ctx context.Context) error {

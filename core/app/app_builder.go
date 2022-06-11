@@ -5,6 +5,7 @@ import (
 
 	"github.com/palantir/stacktrace"
 
+	"github.com/Raphy42/weekend/core/dependency"
 	"github.com/Raphy42/weekend/core/di"
 	"github.com/Raphy42/weekend/core/message"
 	"github.com/Raphy42/weekend/core/scheduler"
@@ -30,7 +31,7 @@ func (b *Builder) Build() (*App, error) {
 		b.bus = message.NewInMemoryBus()
 	}
 
-	container := di.NewContainer(b.name)
+	container := dependency.NewContainer(b.name)
 	return &App{
 		lock:      sync.RWMutex{},
 		name:      b.name,
@@ -40,20 +41,6 @@ func (b *Builder) Build() (*App, error) {
 }
 
 type BuilderOption func(builder *Builder) error
-
-func WithBus(bus message.Bus) BuilderOption {
-	return func(builder *Builder) error {
-		builder.bus = bus
-		return nil
-	}
-}
-
-func WithModules(modules ...di.Module) BuilderOption {
-	return func(builder *Builder) error {
-		builder.modules = append(builder.modules, modules...)
-		return nil
-	}
-}
 
 func newBuilder(name string) *Builder {
 	return &Builder{

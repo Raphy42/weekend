@@ -1,0 +1,7 @@
+telemetry:
+  endpoint: todo
+redis:
+  addr: localhost:6309
+  database: 0
+postgres:
+  dsn: postgres://blog:blog@localhost:5432/blog?sslmode=disable

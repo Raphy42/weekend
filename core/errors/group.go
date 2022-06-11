@@ -26,7 +26,7 @@ func (g Group) Coalesce() error {
 
 	for _, err := range g {
 		if err != nil {
-			rootErr = stacktrace.Propagate(rootErr, err.Error())
+			rootErr = stacktrace.Propagate(rootErr, stacktrace.RootCause(err).Error())
 		}
 	}
 	return rootErr

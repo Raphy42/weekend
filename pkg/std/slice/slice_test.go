@@ -1,4 +1,4 @@
-package std
+package slice
 
 import (
 	"testing"
@@ -10,8 +10,8 @@ func TestMap(t *testing.T) {
 	a := assert.New(t)
 
 	s := NewSlice(1, 2, 3, 4, 5, 6, 7)
-	a.Equal(NewSlice(10, 20, 30, 40, 50, 60, 70), Map(s, func(idx int, in int, eOut *[]int) {
-		(*eOut)[idx] = in * 10
+	a.Equal(NewSlice(10, 20, 30, 40, 50, 60, 70), Map(s, func(_ int, in int) int {
+		return in * 10
 	}))
 }
 

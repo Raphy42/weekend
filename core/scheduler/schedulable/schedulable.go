@@ -13,13 +13,13 @@ import (
 
 type Schedulable interface {
 	func() |
-	func() error |
-	func(ctx context.Context) |
-	func(ctx context.Context) error |
-	func(ctx context.Context) (interface{}, error) |
-	func(ctx context.Context, args interface{}) |
-	func(ctx context.Context, args interface{}) error |
-	func(ctx context.Context, args interface{}) (interface{}, error)
+		func() error |
+		func(ctx context.Context) |
+		func(ctx context.Context) error |
+		func(ctx context.Context) (interface{}, error) |
+		func(ctx context.Context, args interface{}) |
+		func(ctx context.Context, args interface{}) error |
+		func(ctx context.Context, args interface{}) (interface{}, error)
 }
 
 type Fn func(ctx context.Context, args interface{}) (interface{}, error)
@@ -71,7 +71,7 @@ func makeImpl[S Schedulable](schedulable S) Fn {
 	}
 }
 
-func Make[S Schedulable](name string, schedulable S, pols ...policies.Policy) Manifest {
+func Of[S Schedulable](name string, schedulable S, pols ...policies.Policy) Manifest {
 	policy := policies.Default()
 	if len(pols) != 0 {
 		policy = pols[0]

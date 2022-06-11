@@ -2,7 +2,6 @@ package di
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/palantir/stacktrace"
 	"go.uber.org/dig"
@@ -88,7 +87,7 @@ func (c *Container) startChildren(ctx context.Context) error {
 	for _, module := range c.modules {
 		log.Debug("building module", zap.String("di.module.name", module.Name))
 		exposed = append(exposed, module.Exposes...)
-		exports = append(exports, module.Exports...)
+		exports = append(exports, module.Providers...)
 		invocations = append(invocations, module.Invokes...)
 	}
 	log.Debug("building dependency tree",
@@ -122,8 +121,8 @@ func (c *Container) start(ctx context.Context) error {
 }
 
 func (c *Container) Manifest() schedulable.Manifest {
-	return schedulable.Make(
-		fmt.Sprintf("container.%s", c.name),
+	return schedulable.Of(
+		schedulable.Name("container", c.name),
 		c.start,
 	)
 }
