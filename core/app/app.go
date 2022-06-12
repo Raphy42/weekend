@@ -7,12 +7,15 @@ import (
 	"sync"
 
 	"github.com/palantir/stacktrace"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/scheduler"
+	"github.com/Raphy42/weekend/pkg/channel"
 	"github.com/Raphy42/weekend/pkg/chrono"
 )
 
@@ -23,9 +26,11 @@ type App struct {
 	cancel    context.CancelFunc
 	container *dep.Container
 	scheduler *scheduler.Scheduler
+	engine    *Engine
 }
 
 func New(name string, opts ...BuilderOption) (*App, error) {
+	core.SetName(name)
 	builder := newBuilder(name)
 	if err := builder.Apply(opts...); err != nil {
 		return nil, stacktrace.Propagate(err, "could not build application")
@@ -52,6 +57,9 @@ func (a *App) module() dep.Module {
 }
 
 func (a *App) Start(rootCtx context.Context) error {
+	rootCtx, span := otel.Tracer(a.name).Start(rootCtx, "App.Start")
+	defer span.End()
+
 	log := logger.FromContext(rootCtx).With(zap.String("wk.app", a.name))
 	log.Info("starting application")
 
@@ -88,7 +96,15 @@ func (a *App) Start(rootCtx context.Context) error {
 	return nil
 }
 
-func (a *App) Wait() <-chan struct{} {
+func (a *App) Wait(ctx context.Context) <-chan error {
+	ctx, span := otel.Tracer(a.name).Start(ctx, "App.Wait")
+	defer span.End()
+
+	result := make(chan error)
+	if a.engine == nil {
+		errors.Must(channel.Send(ctx, stacktrace.NewError("application is missing `core.Module()`"), result))
+	}
+
 	defer func() {
 		if err := executeOnStart(); err != nil {
 			panic(stacktrace.Propagate(err, "global application stopping hooks could not be run successfully"))
@@ -98,5 +114,20 @@ func (a *App) Wait() <-chan struct{} {
 	if a.ctx == nil {
 		panic(stacktrace.NewError("application has not been started prior to polling (missing `App.Start`)"))
 	}
-	return a.ctx.Done()
+
+	go func() {
+		select {
+		case <-a.ctx.Done():
+			errors.Must(channel.Send(ctx, nil, result))
+		case err := <-a.engine.errors:
+			errors.Must(channel.Send(ctx, err, result))
+		}
+	}()
+
+	return result
+}
+
+func (a *App) SetEngine(engine *Engine) error {
+	a.engine = engine
+	return nil
 }

@@ -31,12 +31,13 @@ func (b *Builder) Build() (*App, error) {
 	}
 
 	container := dep.NewContainer(b.name)
-	return &App{
+	app := App{
 		lock:      sync.RWMutex{},
 		name:      b.name,
 		container: container.Use(b.modules...),
 		scheduler: scheduler.New(b.bus),
-	}, nil
+	}
+	return &app, nil
 }
 
 type BuilderOption func(builder *Builder) error

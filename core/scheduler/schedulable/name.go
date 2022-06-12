@@ -1,7 +1,9 @@
 package schedulable
 
-import "strings"
+import (
+	"strings"
+)
 
 func Name(parts ...string) string {
-	return strings.Join(parts, ".")
+	return "async." + strings.Join(parts, ".")
 }

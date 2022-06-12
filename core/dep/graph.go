@@ -6,6 +6,8 @@ import (
 
 	"github.com/heimdalr/dag"
 	"github.com/palantir/stacktrace"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/errors"
@@ -23,10 +25,19 @@ func NewGraph(dag *dag.DAG, registry *Registry) *Graph {
 }
 
 func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) error {
+	ctx, span := otel.Tracer("Graph.executeDependency").Start(ctx, dependency.Name())
+	defer span.End()
+
 	kindS := "factory"
 	if dependency.Kind() == SideEffect {
 		kindS = "side-effect"
 	}
+	span.SetAttributes(
+		attribute.String("wk.dependency.kind", kindS),
+		attribute.Stringer("wk.dependency.id", dependency.id),
+		attribute.String("wk.dependency.name", dependency.Name()),
+	)
+
 	log := logger.FromContext(ctx).With(
 		zap.String("wk.dependency.name", dependency.Name()),
 		zap.String("wk.dependency.kind", kindS),

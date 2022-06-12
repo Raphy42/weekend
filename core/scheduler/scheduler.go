@@ -6,6 +6,8 @@ import (
 
 	"github.com/palantir/stacktrace"
 	"github.com/rs/xid"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/errors"
@@ -42,6 +44,14 @@ func Schedule(ctx context.Context, manifest schedulable.Manifest, args interface
 }
 
 func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
+	parent, span := otel.Tracer("scheduler.Scheduler").Start(parent, manifest.ID.String())
+	span.SetAttributes(
+		attribute.String("wk.manifest.name", manifest.Name),
+		attribute.Stringer("wk.manifest.id", manifest.ID),
+		attribute.Stringer("wk.scheduler.id", s.id),
+	)
+	defer span.End()
+
 	handle, resultChan, errChan := NewHandle(parent, s.id)
 	log := logger.FromContext(parent).With(
 		zap.Stringer("wk.sched.id", handle.ID),
@@ -57,6 +67,8 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 	log.Debug("scheduling function")
 	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, handle.ID, handle.Parent))
 	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f schedulable.Fn, in interface{}, bus message.Bus) {
+		ctx, goRoutineSpan := otel.Tracer("scheduler.goroutine").Start(ctx, manifest.Name)
+		defer goRoutineSpan.End()
 		// todo install telemetry
 		defer errors.InstallPanicObserver()
 		defer func() {

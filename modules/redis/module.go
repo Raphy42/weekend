@@ -3,22 +3,24 @@ package redis
 import (
 	"context"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/extra/redisotel/v9"
+	"github.com/go-redis/redis/v9"
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/config"
 	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
-	"github.com/Raphy42/weekend/modules/core"
+	"github.com/Raphy42/weekend/pkg/chrono"
 )
 
 var (
 	ModuleName = dep.Name("wk", "redis")
 )
 
-func clientFactory(ctx context.Context, cfg *config.Config, _ *core.EngineBuilder) (*Client, error) {
+func clientFactory(ctx context.Context, cfg *config.Config, _ *app.EngineBuilder) (*Client, error) {
 	conf, err := ConfigFrom(ctx, *cfg)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "invalid redis config")
@@ -42,6 +44,8 @@ func clientFactory(ctx context.Context, cfg *config.Config, _ *core.EngineBuilde
 		return nil, stacktrace.NewErrorWithCode(errors.EUnreachable, "unexpected redis mode: '%s'", conf.Mode)
 	}
 
+	inner.AddHook(redisotel.NewTracingHook())
+
 	return &Client{
 		inner: inner,
 		cfg:   conf,
@@ -55,11 +59,13 @@ func redisVersion(ctx context.Context, client *Client) error {
 		zap.String("redis.username", client.inner.Options().Username),
 	)
 
+	timer := chrono.NewChrono()
+	timer.Start()
 	pong, err := client.inner.Ping(ctx).Result()
 	if err != nil {
 		return stacktrace.Propagate(err, "could not get redis PING result")
 	}
-	log.Info("connected to redis", zap.String("ping.reply", pong))
+	log.Info("connected to redis", zap.String("ping.reply", pong), zap.Duration("ping.delay", timer.Elapsed()))
 	return nil
 }
 

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/rs/xid"
+	"go.opentelemetry.io/otel"
 
 	"github.com/Raphy42/weekend/core/scheduler/schedulable"
 )
@@ -33,6 +34,9 @@ func NewHandle(ctx context.Context, parent xid.ID) (*Handle, chan<- interface{},
 }
 
 func (h Handle) Poll(ctx context.Context) (interface{}, error) {
+	ctx, span := otel.Tracer("Handle.Poll").Start(ctx, h.ID.String())
+	defer span.End()
+
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()

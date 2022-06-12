@@ -10,7 +10,6 @@ import (
 type Module struct {
 	Name        string
 	Factories   []interface{}
-	Exposes     []interface{}
 	SideEffects []interface{}
 }
 
@@ -22,22 +21,15 @@ func Factories(exports ...interface{}) ModuleOption {
 	}
 }
 
-func Expose(exposed interface{}) ModuleOption {
+func SideEffects(invocation ...interface{}) ModuleOption {
 	return func(module *Module) {
-		module.Exposes = append(module.Exposes, exposed)
-	}
-}
-
-func SideEffects(invocation interface{}) ModuleOption {
-	return func(module *Module) {
-		module.SideEffects = append(module.SideEffects, invocation)
+		module.SideEffects = append(module.SideEffects, invocation...)
 	}
 }
 
 func Declare(name string, options ...ModuleOption) Module {
 	mod := Module{
 		Name:        name,
-		Exposes:     make([]interface{}, 0),
 		Factories:   make([]interface{}, 0),
 		SideEffects: make([]interface{}, 0),
 	}
@@ -59,16 +51,12 @@ func (m Module) Print() string {
 	return fmt.Sprintf(`%s
 Factories: %d
 %s
-Exposes: %d
-%s
 Side Effects: %d
 %s
 `,
 		m.Name,
 		len(m.Factories),
 		sprint(m.Factories),
-		len(m.Exposes),
-		sprint(m.Exposes),
 		len(m.SideEffects),
 		sprint(m.SideEffects))
 }

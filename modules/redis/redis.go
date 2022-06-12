@@ -1,8 +1,6 @@
 package redis
 
-import (
-	"github.com/go-redis/redis/v8"
-)
+import "github.com/go-redis/redis/v9"
 
 type Client struct {
 	//sync.RWMutex
