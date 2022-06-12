@@ -10,6 +10,7 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -127,15 +128,22 @@ func (g *Graph) childrenFactories(dependency *Dependency) ([]*Dependency, error)
 // Solve solves the dependency DAG and instantiate it
 // todo: a working algorithm with no hacks
 func (g *Graph) Solve(ctx context.Context) error {
+	ctx, span := otel.Tracer(core.Name()).Start(ctx, "Graph.solve")
+	defer span.End()
+
 	log := logger.FromContext(ctx)
 	registeredFactories := g.registry.Kind(Factory)
 
 	sort.Slice(registeredFactories, func(i, j int) bool {
 		a := registeredFactories[i]
 		b := registeredFactories[j]
+
 		aD, err := g.inner.GetOrderedAncestors(a.Name())
+		span.RecordError(err)
 		errors.Must(err)
+
 		bD, err := g.inner.GetOrderedAncestors(b.Name())
+		span.RecordError(err)
 		errors.Must(err)
 		return len(aD) < len(bD)
 	})
@@ -143,6 +151,7 @@ func (g *Graph) Solve(ctx context.Context) error {
 	orderedFactories := registeredFactories
 	for idx, factory := range orderedFactories {
 		if err := g.executeDependency(ctx, factory); err != nil {
+			span.RecordError(err)
 			return stacktrace.Propagate(err, "factory '%s' execution (step %d of %d) failed", factory.Name(), idx+1, len(orderedFactories)+1)
 		}
 	}
@@ -151,6 +160,7 @@ func (g *Graph) Solve(ctx context.Context) error {
 	sideEffects := g.registry.Kind(SideEffect)
 	for idx, sideEffect := range sideEffects {
 		if err := g.executeDependency(ctx, sideEffect); err != nil {
+			span.RecordError(err)
 			return stacktrace.Propagate(err, "side effect '%s' execution (step %d of %d) failed", sideEffect.Name(), idx+1, len(sideEffects)+1)
 		}
 	}

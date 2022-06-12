@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/palantir/stacktrace"
+	"go.opentelemetry.io/otel"
 
+	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/scheduler/schedulable"
 )
 
@@ -22,6 +24,9 @@ func NewContainer(name string) *Container {
 }
 
 func (c *Container) start(ctx context.Context) (interface{}, error) {
+	ctx, span := otel.Tracer(core.Name()).Start(ctx, "Container.start")
+	defer span.End()
+
 	graph, err := NewGraphBuilder().
 		Build(ctx, c.modules...)
 	if err != nil {

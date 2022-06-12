@@ -6,8 +6,10 @@ import (
 
 	"github.com/heimdalr/dag"
 	"github.com/palantir/stacktrace"
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -29,6 +31,9 @@ func NewGraphBuilder() *GraphBuilder {
 }
 
 func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, error) {
+	ctx, span := otel.Tracer(core.Name()).Start(ctx, "GraphBuilder.Build")
+	defer span.End()
+
 	log := logger.FromContext(ctx)
 
 	// group by stage

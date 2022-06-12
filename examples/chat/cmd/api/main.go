@@ -21,7 +21,7 @@ func main() {
 
 	defer errors.InstallPanicObserver()
 
-	ctx, span := telemetry.Install(name, context.Background())
+	ctx, span := telemetry.Install(name).Start(context.Background(), "main")
 	defer span.End()
 
 	sdk, err := app.New(name,

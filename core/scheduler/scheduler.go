@@ -80,6 +80,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 		result, err := f(ctx, in)
 
 		if err != nil {
+			goRoutineSpan.RecordError(err)
 			_ = bus.Emit(ctx, NewFailureMessage(handle.ID, err))
 			select {
 			case <-ctx.Done():
