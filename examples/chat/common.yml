@@ -1,7 +1,7 @@
 telemetry:
   endpoint: http://127.0.0.1
 redis:
-  addr: localhost:6309
+  addr: 127.0.0.1:6379
   database: 0
 postgres:
   dsn: postgres://blog:blog@localhost:5432/blog?sslmode=disable

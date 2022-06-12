@@ -52,7 +52,7 @@ func localConfigFrom(ctx context.Context, conf config.Config) (*Configuration, e
 		return nil, stacktrace.Propagate(err, confAddrMissing("host address not found in config (host:port)"))
 	}
 
-	database, err := conf.Number(ctx, ConfDatabase, 0)
+	database, err := conf.Int(ctx, ConfDatabase, 0)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, confDatabaseMissing("database not found in config (number)"))
 	}
@@ -71,7 +71,7 @@ func localConfigFrom(ctx context.Context, conf config.Config) (*Configuration, e
 		Mode: ModeLocal,
 		Servers: slice.New(ServerConfiguration{
 			Addr:     addr,
-			Database: int(database),
+			Database: database,
 			Password: password,
 			Username: username,
 		}),

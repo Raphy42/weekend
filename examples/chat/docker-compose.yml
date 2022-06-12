@@ -1,0 +1,29 @@
+version: '3.6'
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - "6831:6831/udp"
+      - "16686:16686"
+
+  postgres:
+    image: bitnami/postgresql
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: bitnami/redis
+    environment:
+      ALLOW_EMPTY_PASSWORD: yes
+    ports:
+      - "6379:6379"
+
+  redis-commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: rediscommander/redis-commander:latest
+    restart: always
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"

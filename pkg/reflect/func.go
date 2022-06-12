@@ -25,8 +25,12 @@ func (f FuncT) Call(args ...Value) (interface{}, error) {
 	if len(result) > 1 {
 		return result, stacktrace.NewError("invalid return arity, wanted <=1 got %d", len(result))
 	}
+
 	if len(result) == 0 {
 		return nil, nil
+	}
+	if result[0].CanConvert(ErrorType) && !result[0].IsNil() {
+		return nil, result[0].Convert(ErrorType).Interface().(error)
 	}
 	return result[0].Interface(), nil
 }

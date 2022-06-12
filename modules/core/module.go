@@ -58,6 +58,8 @@ func Module(opts ...ModuleOption) dep.Module {
 			applicationContextProvider(options.rootCtx),
 			configFromFilenamesProvider(options.configFilenames...),
 		),
-		dep.SideEffects(platformInformation),
+		dep.SideEffects(
+			platformInformation,
+		),
 	)
 }

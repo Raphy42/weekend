@@ -7,6 +7,7 @@ import (
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/modules/core"
+	"github.com/Raphy42/weekend/modules/redis"
 	"github.com/Raphy42/weekend/modules/telemetry"
 )
 
@@ -24,9 +25,10 @@ func main() {
 		app.WithModules(
 			core.Module(
 				core.WithContext(ctx),
-				core.WithConfigFilenames("./examples/blog/common.yml"),
+				core.WithConfigFilenames("./examples/chat/common.yml"),
 			),
 			telemetry.Module(),
+			redis.Module(),
 		),
 	)
 	errors.Mustf(err, "could not create application")

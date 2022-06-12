@@ -27,7 +27,7 @@ func NewInMemoryConfig(values ...map[interface{}]interface{}) *InMemoryConfig {
 	}
 }
 
-func (i *InMemoryConfig) Refresh(ctx context.Context) error {
+func (i *InMemoryConfig) Refresh(_ context.Context) error {
 	i.Lock()
 	defer i.Unlock()
 
@@ -53,7 +53,7 @@ func (i *InMemoryConfig) Merge(ctx context.Context, configurable Configurable) (
 func (i *InMemoryConfig) Get(ctx context.Context, key string) (interface{}, error) {
 	query, err := gojq.Parse(key)
 	if err != nil {
-		return nil, stacktrace.Propagate(err, "not a valid key: (invalid jq query)")
+		return nil, stacktrace.NewError("not a valid key: (invalid jq query)")
 	}
 
 	i.Lock()

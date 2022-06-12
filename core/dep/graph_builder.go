@@ -2,6 +2,7 @@ package dep
 
 import (
 	"context"
+	"strings"
 
 	"github.com/heimdalr/dag"
 	"github.com/palantir/stacktrace"
@@ -114,7 +115,16 @@ func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, er
 	for _, dependency := range graph.GetRoots() {
 		dep := dependency.(*Dependency)
 		if !dep.HasIO() {
-			errs.Append(stacktrace.NewError("no registered factory can construct '%s'", dep.Name()))
+			name := dep.Name()
+			if !strings.HasPrefix(name, "*") {
+				errs.Append(stacktrace.NewError(
+					"no registered factory can construct '%s', did you mean '*%s' ?", dep.Name(), dep.Name()),
+				)
+			} else {
+				errs.Append(stacktrace.NewError(
+					"no registered factory can construct '%s'", dep.Name(), dep.Name()),
+				)
+			}
 		}
 	}
 

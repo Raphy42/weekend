@@ -25,7 +25,7 @@ type Configurable interface {
 //	String(ctx context.Context, key string, defaultTo ...string) (string, error)
 //	Strings(ctx context.Context, key string, defaultTo ...[]string) ([]string, error)
 //	Bytes(ctx context.Context, key string, defaultTo ...[]byte) ([]byte, error)
-//	Number(ctx context.Context, key string, defaultTo ...float64) (float64, error)
+//	Float(ctx context.Context, key string, defaultTo ...float64) (float64, error)
 //	URL(ctx context.Context, key string, defaultTo ...*url.URL) (*url.URL, error)
 //}
 
@@ -83,9 +83,40 @@ func (c Config) Bytes(ctx context.Context, key string, defaultTo ...byte) ([]byt
 	panic("implement me")
 }
 
-func (c Config) Number(ctx context.Context, key string, defaultTo ...float64) (float64, error) {
-	//TODO implement me
-	panic("implement me")
+func (c Config) Float(ctx context.Context, key string, defaultTo ...float64) (float64, error) {
+	v, err := c.Get(ctx, key)
+	if err != nil {
+		return 0.0, err
+	}
+	if v == nil {
+		if len(defaultTo) > 0 {
+			return defaultTo[0], nil
+		}
+		return 0.0, stacktrace.NewError("entry not found in config")
+	}
+	value, ok := v.(float64)
+	if !ok {
+		return 0.0, errors.InvalidCast(0.0, v)
+	}
+	return value, nil
+}
+
+func (c Config) Int(ctx context.Context, key string, defaultTo ...int) (int, error) {
+	v, err := c.Get(ctx, key)
+	if err != nil {
+		return 0, err
+	}
+	if v == nil {
+		if len(defaultTo) > 0 {
+			return defaultTo[0], nil
+		}
+		return 0, stacktrace.NewError("entry not found in config")
+	}
+	value, ok := v.(int)
+	if !ok {
+		return 0, errors.InvalidCast(0, v)
+	}
+	return value, nil
 }
 
 func (c Config) URL(ctx context.Context, key string, defaultTo ...*url.URL) (*url.URL, error) {

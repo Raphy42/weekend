@@ -25,7 +25,7 @@ func NewGraph(dag *dag.DAG, registry *Registry) *Graph {
 func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) error {
 	kindS := "factory"
 	if dependency.Kind() == SideEffect {
-		kindS = "side effect"
+		kindS = "side-effect"
 	}
 	log := logger.FromContext(ctx).With(
 		zap.String("wk.dependency.name", dependency.Name()),
@@ -62,14 +62,15 @@ func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) e
 	}
 
 	// two choices
-	// - factory -> (*T, error)		-> FuncT.CallResult
-	// - factory -> *T & the rest	-> FuncT.Call
+	// (*T, error)		-> FuncT.CallResult
+	// *T & the rest	-> FuncT.Call
 	var result interface{}
 	if funcT.ReturnsResult() {
 		result, err = funcT.CallResult(args...)
 	} else if len(funcT.Outs) == 1 {
 		result, err = funcT.Call(args...)
 	}
+	log.Debug("underlying function called via reflection")
 
 	if len(funcT.Outs) == 0 && dependency.Kind() == Factory {
 		log.Warn("factory has no outputs, it should be declared a side effect instead")
