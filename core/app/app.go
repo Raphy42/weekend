@@ -9,7 +9,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 
-	"github.com/Raphy42/weekend/core/dependency"
+	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/scheduler"
@@ -21,7 +21,7 @@ type App struct {
 	lock      sync.RWMutex
 	ctx       context.Context
 	cancel    context.CancelFunc
-	container *dependency.Container
+	container *dep.Container
 	scheduler *scheduler.Scheduler
 }
 
@@ -30,7 +30,25 @@ func New(name string, opts ...BuilderOption) (*App, error) {
 	if err := builder.Apply(opts...); err != nil {
 		return nil, stacktrace.Propagate(err, "could not build application")
 	}
-	return builder.Build()
+	app, err := builder.Build()
+	if err != nil {
+		return nil, err
+	}
+	app.container.Use(app.module())
+	return app, nil
+}
+
+func (a *App) asInjectable() *App {
+	return a
+}
+
+func (a *App) module() dep.Module {
+	return dep.Declare(
+		"wk.core.app",
+		dep.Factories(
+			a.asInjectable,
+		),
+	)
 }
 
 func (a *App) Start(rootCtx context.Context) error {

@@ -1,11 +1,9 @@
+//go:build grpc
+
 package grpc
 
-import (
-	"github.com/Raphy42/weekend/core/di"
-)
-
-func Module(namespace string) di.Module {
-	return di.Declare(
-		di.Name("wk", "grpc", namespace),
+func Module(namespace string) dep.Module {
+	return dep.Declare(
+		dep.Name("wk", "grpc", namespace),
 	)
 }

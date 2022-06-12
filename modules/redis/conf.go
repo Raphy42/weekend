@@ -18,7 +18,7 @@ const (
 )
 
 var (
-	allModes = strings.Join(slice.NewSlice(ModeLocal, ModeCluster, ModeSentinel), ",")
+	allModes = strings.Join(slice.New(ModeLocal, ModeCluster, ModeSentinel), ",")
 )
 
 var (
@@ -69,7 +69,7 @@ func localConfigFrom(ctx context.Context, conf config.Config) (*Configuration, e
 
 	return &Configuration{
 		Mode: ModeLocal,
-		Servers: slice.NewSlice(ServerConfiguration{
+		Servers: slice.New(ServerConfiguration{
 			Addr:     addr,
 			Database: int(database),
 			Password: password,

@@ -15,14 +15,17 @@ import (
 // - task.encoding.msgpack
 
 func main() {
-	defer errors.InstallPanicHandler()
+	defer errors.InstallPanicObserver()
 
 	ctx := context.Background()
 
 	sdk, err := app.New("api",
 		app.WithSentry(os.Getenv("SENTRY_DSN")),
 		app.WithModules(
-			core.Module(),
+			core.Module(
+				core.WithContext(ctx),
+				core.WithConfigFilenames("./examples/blog/common.yml"),
+			),
 			telemetry.Module(),
 		),
 	)

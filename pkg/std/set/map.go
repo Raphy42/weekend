@@ -1,5 +1,7 @@
 package set
 
+import "reflect"
+
 func Merge(a, b map[interface{}]interface{}) map[interface{}]interface{} {
 	out := make(map[interface{}]interface{}, len(a))
 	for k, v := range a {
@@ -38,4 +40,20 @@ func Items[K comparable, V any](a map[K]V) []V {
 		items = append(items, v)
 	}
 	return items
+}
+
+func AsMapStringInterface(in map[interface{}]interface{}) map[string]interface{} {
+	out := make(map[string]interface{})
+	for k, v := range in {
+		out[reflect.ValueOf(k).String()] = v
+	}
+	return out
+}
+
+func AsMapInterfaceInterface[K comparable](in map[K]interface{}) map[interface{}]interface{} {
+	out := make(map[interface{}]interface{})
+	for k, v := range in {
+		out[reflect.ValueOf(k).Interface()] = v
+	}
+	return out
 }

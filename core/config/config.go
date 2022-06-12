@@ -7,6 +7,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/core/errors"
+	"github.com/Raphy42/weekend/pkg/std/slice"
 )
 
 const (
@@ -88,6 +89,15 @@ func (c Config) Number(ctx context.Context, key string, defaultTo ...float64) (f
 }
 
 func (c Config) URL(ctx context.Context, key string, defaultTo ...*url.URL) (*url.URL, error) {
-	//TODO implement me
-	panic("implement me")
+	v, err := c.String(ctx, key, slice.Map(defaultTo, func(_ int, in *url.URL) string {
+		return in.String()
+	})...)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "entry not found in config")
+	}
+	uri, err := url.Parse(v)
+	if err != nil {
+		return nil, stacktrace.Propagate(err, "invalid url format")
+	}
+	return uri, nil
 }

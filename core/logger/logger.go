@@ -4,13 +4,10 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"sync"
 
 	"github.com/palantir/stacktrace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-
-	"github.com/Raphy42/weekend/pkg/runtime"
 )
 
 const (
@@ -23,11 +20,6 @@ const (
 	LFatal   = zapcore.FatalLevel
 )
 
-type globalLogger struct {
-	sync.RWMutex
-	logger *zap.Logger
-}
-
 func init() {
 	logMode := os.Getenv("WEEKEND_LOG_MODE")
 	if logMode == "" {
@@ -38,11 +30,15 @@ func init() {
 
 	switch logMode {
 	case "DEV":
-		logger, err = zap.NewDevelopment()
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		logger, err = cfg.Build()
 	case "PROD":
 		logger, err = zap.NewProduction()
 	default:
-		logger, err = zap.NewDevelopment()
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		logger, err = cfg.Build()
 	}
 	if err != nil {
 		panic(stacktrace.Propagate(err, "unable to initialise root logger"))
@@ -54,15 +50,15 @@ func init() {
 func New(opts ...Option) *zap.Logger {
 	options := newLoggerOptions()
 	options.apply(opts...)
+	//
+	//caller := runtime.CallerName(options.SkipCallFrame)
+	//
+	//name := caller
+	//if options.Name != "" {
+	//	name = options.Name
+	//}
 
-	caller := runtime.CallerName(options.SkipCallFrame)
-
-	name := caller
-	if options.Name != "" {
-		name = options.Name
-	}
-
-	return zap.L().Named(name)
+	return zap.L()
 }
 
 func ctxDecorator(ctx context.Context) []Option {
@@ -88,4 +84,8 @@ func FromContext(ctx context.Context, opts ...Option) *zap.Logger {
 	// - domain specific
 	opts = append(opts, ctxDecorator(ctx)...)
 	return New(opts...)
+}
+
+func Flush() {
+	_ = zap.L().Sync()
 }

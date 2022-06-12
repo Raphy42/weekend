@@ -1,3 +1,5 @@
+//go:build grpc
+
 package protos
 
 // This file is only an entrypoint for `go generate`

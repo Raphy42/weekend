@@ -23,6 +23,7 @@ var (
 	ValueOf   = reflect.ValueOf
 	UnsafeNew = reflect.New
 	PtrTo     = reflect.PtrTo
+	ErrorType = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 func Zero(t reflect.Type) (value reflect.Value, err error) {

@@ -1,7 +1,7 @@
 package app
 
 import (
-	"github.com/Raphy42/weekend/core/di"
+	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/message"
 )
 
@@ -12,7 +12,7 @@ func WithBus(bus message.Bus) BuilderOption {
 	}
 }
 
-func WithModules(modules ...di.Module) BuilderOption {
+func WithModules(modules ...dep.Module) BuilderOption {
 	return func(builder *Builder) error {
 		builder.modules = append(builder.modules, modules...)
 		return nil

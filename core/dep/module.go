@@ -1,4 +1,4 @@
-package di
+package dep
 
 import (
 	"fmt"
@@ -8,17 +8,17 @@ import (
 )
 
 type Module struct {
-	Name      string
-	Providers []interface{}
-	Exposes   []interface{}
-	Invokes   []interface{}
+	Name        string
+	Factories   []interface{}
+	Exposes     []interface{}
+	SideEffects []interface{}
 }
 
 type ModuleOption func(module *Module)
 
-func Providers(exports ...interface{}) ModuleOption {
+func Factories(exports ...interface{}) ModuleOption {
 	return func(module *Module) {
-		module.Providers = append(module.Providers, exports...)
+		module.Factories = append(module.Factories, exports...)
 	}
 }
 
@@ -28,18 +28,18 @@ func Expose(exposed interface{}) ModuleOption {
 	}
 }
 
-func Invoke(invocation interface{}) ModuleOption {
+func SideEffects(invocation interface{}) ModuleOption {
 	return func(module *Module) {
-		module.Invokes = append(module.Invokes, invocation)
+		module.SideEffects = append(module.SideEffects, invocation)
 	}
 }
 
 func Declare(name string, options ...ModuleOption) Module {
 	mod := Module{
-		Name:      name,
-		Exposes:   make([]interface{}, 0),
-		Providers: make([]interface{}, 0),
-		Invokes:   make([]interface{}, 0),
+		Name:        name,
+		Exposes:     make([]interface{}, 0),
+		Factories:   make([]interface{}, 0),
+		SideEffects: make([]interface{}, 0),
 	}
 	for _, opt := range options {
 		opt(&mod)
@@ -57,18 +57,18 @@ func sprint(items []interface{}) string {
 
 func (m Module) Print() string {
 	return fmt.Sprintf(`%s
-Providers: %d
+Factories: %d
 %s
 Exposes: %d
 %s
-Invokes: %d
+Side Effects: %d
 %s
 `,
 		m.Name,
-		len(m.Providers),
-		sprint(m.Providers),
+		len(m.Factories),
+		sprint(m.Factories),
 		len(m.Exposes),
 		sprint(m.Exposes),
-		len(m.Invokes),
-		sprint(m.Invokes))
+		len(m.SideEffects),
+		sprint(m.SideEffects))
 }

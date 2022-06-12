@@ -7,14 +7,14 @@ import (
 	"go.opentelemetry.io/otel/sdk/trace"
 
 	"github.com/Raphy42/weekend/core/config"
-	"github.com/Raphy42/weekend/core/di"
+	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/telemetry"
 	"github.com/Raphy42/weekend/modules/core"
 )
 
 var (
-	ModuleName = di.Name("wk", "telemetry")
+	ModuleName = dep.Name("wk", "telemetry")
 )
 
 func telemetryProvider(
@@ -33,14 +33,14 @@ func telemetryProvider(
 	return t, nil
 }
 
-func tracerProvider(ctx context.Context, config config.Config) (*trace.TracerProvider, error) {
+func tracerProvider(ctx context.Context, config *config.Config) (*trace.TracerProvider, error) {
 	return telemetry.NewJaegerTracer(ctx, config)
 }
 
-func Module() di.Module {
-	return di.Declare(
+func Module() dep.Module {
+	return dep.Declare(
 		ModuleName,
-		di.Providers(
+		dep.Factories(
 			telemetryProvider,
 			tracerProvider,
 		),

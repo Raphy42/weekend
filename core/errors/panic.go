@@ -14,7 +14,7 @@ func Mustf(err error, format string, args ...interface{}) {
 	}
 	diag := Diagnostic(err)
 	log := logger.New(logger.SkipCallFrame(1))
-	log.Debug(fmt.Sprintf(format, args...), zap.NamedError("crash", err), zap.Stringer("errors.diagnostic", diag))
+	log.Debug(fmt.Sprintf(format, args...), zap.Error(err), zap.Stringer("errors.diagnostic", diag))
 	panic(err)
 }
 
@@ -24,6 +24,6 @@ func Must(err error) {
 	}
 	diag := Diagnostic(err)
 	log := logger.New(logger.SkipCallFrame(1))
-	log.Debug("unrecoverable error", zap.NamedError("crash", err), zap.Stringer("errors.diagnostic", diag))
+	log.Debug("unrecoverable error", zap.Error(err), zap.Stringer("errors.diagnostic", diag))
 	panic(err)
 }

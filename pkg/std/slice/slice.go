@@ -1,6 +1,6 @@
 package slice
 
-func NewSlice[T any](items ...T) []T {
+func New[T any](items ...T) []T {
 	return items
 }
 
@@ -112,4 +112,24 @@ func Find[
 		}
 	}
 	return nil
+}
+
+func Any[
+	T any,
+	P func(item T) bool,
+](slice []T, predicate P) bool {
+	for _, item := range slice {
+		if predicate(item) {
+			return true
+		}
+	}
+	return false
+}
+
+func Contains[
+	T comparable,
+](slice []T, value T) bool {
+	return Any(slice, func(item T) bool {
+		return value == item
+	})
 }

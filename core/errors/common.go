@@ -4,8 +4,6 @@ import (
 	"context"
 
 	"github.com/palantir/stacktrace"
-
-	"github.com/Raphy42/weekend/pkg/reflect"
 )
 
 var (
@@ -33,5 +31,5 @@ func NotImplemented(reason string) error {
 }
 
 func InvalidCast(expected, got interface{}) error {
-	return stacktrace.NewErrorWithCode(EInvalidCast, "could not cast interface{} to %T, was %s", expected, reflect.Typename(got))
+	return stacktrace.NewErrorWithCode(EInvalidCast, "could not cast interface{} to %T, was %T", expected, got)
 }

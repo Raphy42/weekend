@@ -1,13 +1,11 @@
 package redis
 
-import "github.com/Raphy42/weekend/core/di"
-
 var (
-	ModuleName = di.Name("wk", "redis")
+	ModuleName = dep.Name("wk", "redis")
 )
 
-func Module() di.Module {
-	return di.Declare(
+func Module() dep.Module {
+	return dep.Declare(
 		ModuleName,
 	)
 }

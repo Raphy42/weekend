@@ -1,7 +1,6 @@
 package reflect
 
 import (
-	"fmt"
 	"reflect"
 
 	"github.com/palantir/stacktrace"
@@ -14,7 +13,39 @@ type FuncT struct {
 }
 
 func (f FuncT) ReturnsResult() bool {
-	return len(f.Outs) == 2 && f.Outs[1].Implements(reflect.TypeOf(fmt.Errorf("")))
+	return len(f.Outs) == 2 && f.Outs[1].Implements(ErrorType)
+}
+
+func (f FuncT) String() string {
+	return Typename(f.Value.Interface())
+}
+
+func (f FuncT) Call(args ...Value) (interface{}, error) {
+	result := f.Value.Call(args)
+	if len(result) > 1 {
+		return result, stacktrace.NewError("invalid return arity, wanted <=1 got %d", len(result))
+	}
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return result[0].Interface(), nil
+}
+
+func (f FuncT) CallResult(args ...Value) (interface{}, error) {
+	result := f.Value.Call(args)
+	if len(result) != 2 {
+		return result, stacktrace.NewError("invalid return arity, wanted 2 got %d", len(result))
+	}
+	if !result[1].CanConvert(ErrorType) {
+		return result, stacktrace.NewError("invalid second return type, wanted error got %s", result[1])
+	}
+
+	err := result[1]
+	if err.IsNil() {
+		return result[0].Interface(), nil
+	}
+
+	return result[0].Interface(), result[1].Convert(ErrorType).Interface().(error)
 }
 
 func Func(fn interface{}) (*FuncT, error) {

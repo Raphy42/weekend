@@ -8,9 +8,10 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-func InstallPanicHandler() {
+func InstallPanicObserver() {
 	if err := recover(); err != nil {
 		sentry.CurrentHub().Recover(err)
 		sentry.Flush(time.Second * 5)
+		panic(err)
 	}
 }

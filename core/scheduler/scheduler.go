@@ -8,6 +8,7 @@ import (
 	"github.com/rs/xid"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/message"
 	"github.com/Raphy42/weekend/core/scheduler/schedulable"
@@ -56,11 +57,16 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 	log.Debug("scheduling function")
 	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, handle.ID, handle.Parent))
 	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f schedulable.Fn, in interface{}, bus message.Bus) {
+		// todo install telemetry
+		defer errors.InstallPanicObserver()
 		defer func() {
 			_ = log.Sync()
 		}()
 
+		// welcome to the
+		// actual function call
 		result, err := f(ctx, in)
+
 		if err != nil {
 			_ = bus.Emit(ctx, NewFailureMessage(handle.ID, err))
 			select {
