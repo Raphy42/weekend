@@ -38,3 +38,11 @@ func HasFlag(err error, flag uint16) bool {
 	}
 	return false
 }
+
+func IsTransient(err error) bool {
+	return HasFlag(err, KTransient)
+}
+
+func HasCode(err error, code stacktrace.ErrorCode) bool {
+	return stacktrace.GetCode(err) == code
+}

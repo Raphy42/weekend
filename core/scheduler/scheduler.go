@@ -13,7 +13,7 @@ import (
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/message"
-	"github.com/Raphy42/weekend/core/scheduler/schedulable"
+	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
 type Scheduler struct {
@@ -26,7 +26,14 @@ func New(bus message.Bus) *Scheduler {
 	return &Scheduler{bus: bus, id: xid.New()}
 }
 
-func Schedule(ctx context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
+func Schedule(ctx context.Context, manifest async.Manifest, args any) (*Handle, error) {
+	ctx, span := otel.Tracer("wk.core.schedule").Start(ctx, "scheduleFromContext")
+	span.SetAttributes(
+		attribute.String("wk.manifest.name", manifest.Name),
+		attribute.Stringer("wk.manifest.id", manifest.ID),
+	)
+	defer span.End()
+
 	switch v := ctx.(type) {
 	case *Context:
 		if v == nil {
@@ -39,11 +46,19 @@ func Schedule(ctx context.Context, manifest schedulable.Manifest, args interface
 		}
 		return v.Scheduler.Schedule(ctx, manifest, args)
 	default:
-		return nil, stacktrace.NewError("unable to schedule, not a scheduling context")
+		schedulerI := ctx.Value(schedulerInjectionKey)
+		if schedulerI == nil {
+			return nil, stacktrace.NewError("unable to schedule, not a scheduling context, context is %T", v)
+		}
+		scheduler, ok := schedulerI.(*Scheduler)
+		if !ok {
+			return nil, stacktrace.NewError("invalid context value, expected *scheduler.Scheduler got %T", schedulerI)
+		}
+		return scheduler.Schedule(ctx, manifest, args)
 	}
 }
 
-func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
+func (s *Scheduler) Schedule(parent context.Context, manifest async.Manifest, args any) (*Handle, error) {
 	parent, span := otel.Tracer("wk.core.schedule").Start(parent, "schedule")
 	span.SetAttributes(
 		attribute.String("wk.manifest.name", manifest.Name),
@@ -52,7 +67,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 	)
 	defer span.End()
 
-	handle, resultChan, errChan := NewHandle(parent, s.id)
+	handle, resultChan, errChan := NewHandle(parent, s.id, manifest)
 	log := logger.FromContext(parent).With(
 		zap.Stringer("wk.sched.id", handle.ID),
 		zap.String("wk.sched.name", manifest.Name),
@@ -65,11 +80,12 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 	defer s.Unlock()
 
 	log.Debug("scheduling function")
-	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, handle.ID, handle.Parent))
-	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f schedulable.Fn, in interface{}, bus message.Bus) {
+	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, manifest.ID, handle.Parent))
+	go func(ctx context.Context, resultC chan<- any, errC chan<- error, f async.Fn, in any, bus message.Bus) {
 		ctx, goRoutineSpan := otel.Tracer("wk.core.schedule").Start(ctx, "goroutine")
 		goRoutineSpan.SetAttributes(attribute.String("wk.manifest.name", manifest.Name))
 		defer goRoutineSpan.End()
+
 		// todo install telemetry
 		defer errors.InstallPanicObserver()
 		defer func() {
@@ -82,7 +98,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 
 		if err != nil {
 			goRoutineSpan.RecordError(err)
-			_ = bus.Emit(ctx, NewFailureMessage(handle.ID, err))
+			_ = bus.Emit(ctx, NewFailureMessage(manifest.ID, handle.ID, err))
 			select {
 			case <-ctx.Done():
 				log.Error("unexpected context termination, error was lost", zap.Error(err))
@@ -91,7 +107,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 				return
 			}
 		} else {
-			_ = bus.Emit(ctx, NewSuccessMessage(handle.ID))
+			_ = bus.Emit(ctx, NewSuccessMessage(manifest.ID, handle.ID))
 			select {
 			case <-ctx.Done():
 				log.Error("unexpected context termination, result was lost", zap.Any("result", result))

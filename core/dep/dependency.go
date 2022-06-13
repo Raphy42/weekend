@@ -49,11 +49,11 @@ type Dependency struct {
 	id        xid.ID
 	kind      Kind
 	status    Status
-	value     interface{}
+	value     any
 	lastError error
 }
 
-func newDependency(kind Kind, value interface{}) *Dependency {
+func newDependency(kind Kind, value any) *Dependency {
 	status := NewStatus
 	// factories should not need to be initialised
 	if kind == Factory {
@@ -67,7 +67,7 @@ func newDependency(kind Kind, value interface{}) *Dependency {
 	}
 }
 
-func NewFactory(value interface{}) (*Dependency, error) {
+func NewFactory(value any) (*Dependency, error) {
 	funcT, err := reflect.Func(value)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "invalid factory type")
@@ -78,7 +78,7 @@ func NewFactory(value interface{}) (*Dependency, error) {
 type Transition struct {
 	sync.RWMutex
 	From  xid.ID
-	Value interface{}
+	Value any
 }
 
 func (t *Transition) String() string {
@@ -92,7 +92,7 @@ func NewResult(from xid.ID) (*Dependency, error) {
 	return newDependency(Transitive, &Transition{Value: nil, From: from}), nil
 }
 
-func NewSideEffect(value interface{}) (*Dependency, error) {
+func NewSideEffect(value any) (*Dependency, error) {
 	funcT, err := reflect.Func(value)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "invalid side effect type")
@@ -103,7 +103,7 @@ func NewSideEffect(value interface{}) (*Dependency, error) {
 type InstanceContainer struct {
 	sync.RWMutex
 	Type  reflect.Type
-	Value interface{}
+	Value any
 }
 
 func (i *InstanceContainer) String() string {
@@ -123,7 +123,7 @@ func NewToken(value string) (*Dependency, error) {
 	return newDependency(Token, &value), nil
 }
 
-func (d *Dependency) Solve(value interface{}, err error) {
+func (d *Dependency) Solve(value any, err error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
@@ -144,7 +144,7 @@ func (d *Dependency) Status() Status {
 	return d.status
 }
 
-func (d *Dependency) Value() (interface{}, error) {
+func (d *Dependency) Value() (any, error) {
 	if d.lastError != nil && d.status != InitialisedStatus {
 		return nil, stacktrace.Propagate(d.lastError, "dependency is in an invalid state")
 	}

@@ -21,7 +21,7 @@ func configFromFilenames(ctx context.Context, filenames ...string) (config.Confi
 		}
 		switch v := filepath.Ext(filename); v {
 		case ".yml", ".yaml":
-			var values map[interface{}]interface{}
+			var values map[any]any
 			if err = yaml.Unmarshal(content, &values); err != nil {
 				return nil, stacktrace.Propagate(err, "YAML deserialization failed")
 			}
@@ -32,7 +32,7 @@ func configFromFilenames(ctx context.Context, filenames ...string) (config.Confi
 			}
 			cfg = merged.(*config.InMemoryConfig)
 		case ".json":
-			var values map[interface{}]interface{}
+			var values map[any]any
 			if err = json.Unmarshal(content, &values); err != nil {
 				return nil, stacktrace.Propagate(err, "JSON deserialization failed")
 			}

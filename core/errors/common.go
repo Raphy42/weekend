@@ -30,6 +30,6 @@ func NotImplemented(reason string) error {
 	return stacktrace.NewErrorWithCode(ENotImplemented, "reached unimplemented part of code: %s", reason)
 }
 
-func InvalidCast(expected, got interface{}) error {
-	return stacktrace.NewErrorWithCode(EInvalidCast, "could not cast interface{} to %T, was %T", expected, got)
+func InvalidCast(expected, got any) error {
+	return stacktrace.NewErrorWithCode(EInvalidCast, "could not cast any to %T, was %T", expected, got)
 }

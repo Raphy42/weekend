@@ -9,19 +9,19 @@ import (
 
 type Module struct {
 	Name        string
-	Factories   []interface{}
-	SideEffects []interface{}
+	Factories   []any
+	SideEffects []any
 }
 
 type ModuleOption func(module *Module)
 
-func Factories(exports ...interface{}) ModuleOption {
+func Factories(exports ...any) ModuleOption {
 	return func(module *Module) {
 		module.Factories = append(module.Factories, exports...)
 	}
 }
 
-func SideEffects(invocation ...interface{}) ModuleOption {
+func SideEffects(invocation ...any) ModuleOption {
 	return func(module *Module) {
 		module.SideEffects = append(module.SideEffects, invocation...)
 	}
@@ -30,8 +30,8 @@ func SideEffects(invocation ...interface{}) ModuleOption {
 func Declare(name string, options ...ModuleOption) Module {
 	mod := Module{
 		Name:        name,
-		Factories:   make([]interface{}, 0),
-		SideEffects: make([]interface{}, 0),
+		Factories:   make([]any, 0),
+		SideEffects: make([]any, 0),
 	}
 	for _, opt := range options {
 		opt(&mod)
@@ -39,7 +39,7 @@ func Declare(name string, options ...ModuleOption) Module {
 	return mod
 }
 
-func sprint(items []interface{}) string {
+func sprint(items []any) string {
 	out := make([]string, len(items))
 	for idx, item := range items {
 		out[idx] = "/t" + reflect.SPrint(item)

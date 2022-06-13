@@ -20,7 +20,7 @@ func (f FuncT) String() string {
 	return Typename(f.Value.Interface())
 }
 
-func (f FuncT) Call(args ...Value) (interface{}, error) {
+func (f FuncT) Call(args ...Value) (any, error) {
 	result := f.Value.Call(args)
 	if len(result) > 1 {
 		return result, stacktrace.NewError("invalid return arity, wanted <=1 got %d", len(result))
@@ -35,7 +35,7 @@ func (f FuncT) Call(args ...Value) (interface{}, error) {
 	return result[0].Interface(), nil
 }
 
-func (f FuncT) CallResult(args ...Value) (interface{}, error) {
+func (f FuncT) CallResult(args ...Value) (any, error) {
 	result := f.Value.Call(args)
 	if len(result) != 2 {
 		return result, stacktrace.NewError("invalid return arity, wanted 2 got %d", len(result))
@@ -52,7 +52,7 @@ func (f FuncT) CallResult(args ...Value) (interface{}, error) {
 	return result[0].Interface(), result[1].Convert(ErrorType).Interface().(error)
 }
 
-func Func(fn interface{}) (*FuncT, error) {
+func Func(fn any) (*FuncT, error) {
 	t := reflect.ValueOf(fn)
 	if t.Kind() == reflect.Pointer {
 		return Func(t.Elem().Interface())

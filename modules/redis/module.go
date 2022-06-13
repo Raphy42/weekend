@@ -2,6 +2,7 @@ package redis
 
 import (
 	"context"
+	"time"
 
 	"github.com/go-redis/redis/extra/redisotel/v9"
 	"github.com/go-redis/redis/v9"
@@ -13,6 +14,7 @@ import (
 	"github.com/Raphy42/weekend/core/dep"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
+	"github.com/Raphy42/weekend/core/service"
 	"github.com/Raphy42/weekend/pkg/chrono"
 )
 
@@ -70,6 +72,20 @@ func redisVersion(ctx context.Context, client *Client) error {
 	return nil
 }
 
+func redisHealthCheck(client *Client, builder *app.EngineBuilder, health *service.Registry) error {
+	builder.HealthCheck(client, time.Second*5,
+		func(ctx context.Context) error {
+			if err := client.Ping(ctx); err != nil {
+				health.Set(client, err)
+				return err
+			}
+			health.Set(client, nil)
+			return nil
+		},
+	)
+	return nil
+}
+
 func Module() dep.Module {
 	return dep.Declare(
 		ModuleName,
@@ -78,6 +94,7 @@ func Module() dep.Module {
 		),
 		dep.SideEffects(
 			redisVersion,
+			redisHealthCheck,
 		),
 	)
 }

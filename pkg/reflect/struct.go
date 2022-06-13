@@ -13,7 +13,7 @@ type StructT struct {
 	Tags   map[string]*structtag.Tags
 }
 
-func Struct(s interface{}) (*StructT, error) {
+func Struct(s any) (*StructT, error) {
 	t := reflect.ValueOf(s)
 	if t.Kind() == reflect.Pointer {
 		return Struct(t.Elem().Interface())

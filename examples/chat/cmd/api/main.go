@@ -7,6 +7,7 @@ import (
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/telemetry"
+	"github.com/Raphy42/weekend/modules/api"
 	"github.com/Raphy42/weekend/modules/core"
 	"github.com/Raphy42/weekend/modules/redis"
 )
@@ -32,10 +33,11 @@ func main() {
 				core.WithConfigFilenames("./examples/chat/common.yml"),
 			),
 			redis.Module(),
+			api.Module(),
 		),
 	)
 	errors.Mustf(err, "could not create application")
 
 	errors.Mustf(sdk.Start(ctx), "could not start application")
-	errors.Mustf(<-sdk.Wait(ctx), "application shut down with non-nil error")
+	errors.Mustf(sdk.Wait(ctx), "application shut down with non-nil error")
 }

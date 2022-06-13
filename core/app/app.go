@@ -20,13 +20,14 @@ import (
 )
 
 type App struct {
-	name      string
-	lock      sync.RWMutex
-	ctx       context.Context
-	cancel    context.CancelFunc
-	container *dep.Container
-	scheduler *scheduler.Scheduler
-	engine    *Engine
+	name         string
+	lock         sync.RWMutex
+	ctx          context.Context
+	cancel       context.CancelFunc
+	container    *dep.Container
+	scheduler    *scheduler.Scheduler
+	engineHandle *scheduler.Handle
+	engine       *Engine
 }
 
 func New(name string, opts ...BuilderOption) (*App, error) {
@@ -78,13 +79,14 @@ func (a *App) Start(rootCtx context.Context) error {
 	a.ctx = ctx
 	a.cancel = cancel
 
+	span.AddEvent("hooks.global.on_start")
 	if err := executeOnStart(); err != nil {
 		return stacktrace.Propagate(err, "global application starting hooks could not be run successfully")
 	}
 	log.Debug("global start hooks ran successfully", zap.Duration("wk.init.duration", timer.Elapsed()))
 
-	span.AddEvent("wk.container.scheduled")
 	handle, err := a.scheduler.Schedule(ctx, a.container.Manifest(), nil)
+	span.AddEvent("wk.container.scheduled")
 	if err != nil {
 		return stacktrace.Propagate(err, "unable to schedule container")
 	}
@@ -95,18 +97,18 @@ func (a *App) Start(rootCtx context.Context) error {
 		return stacktrace.Propagate(err, "container bootstrap returned non-nil error")
 	}
 
-	handle, err = a.scheduler.Schedule(ctx, a.engine.Manifest(), nil)
+	a.engineHandle, err = a.scheduler.Schedule(ctx, a.engine.Manifest(), nil)
+	span.AddEvent("wk.engine.scheduled")
 	if err != nil {
 		return stacktrace.Propagate(err, "unable to schedule engine")
 	}
-	_, err = handle.Poll(ctx)
 
 	log.Info("application initialised", zap.Duration("wk.init.duration", timer.Elapsed()))
 
 	return nil
 }
 
-func (a *App) Wait(ctx context.Context) <-chan error {
+func (a *App) Wait(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.app").Start(ctx, "App.Wait")
 	defer span.End()
 
@@ -127,6 +129,8 @@ func (a *App) Wait(ctx context.Context) <-chan error {
 
 	go func() {
 		select {
+		case err := <-a.engineHandle.Error():
+			errors.Must(channel.Send(ctx, err, result))
 		case <-a.ctx.Done():
 			errors.Must(channel.Send(ctx, nil, result))
 		case err := <-a.engine.errors:
@@ -134,7 +138,12 @@ func (a *App) Wait(ctx context.Context) <-chan error {
 		}
 	}()
 
-	return result
+	defer a.engineHandle.Cancel()
+	defer func() {
+		span.RecordError(executeOnStop())
+	}()
+
+	return <-result
 }
 
 func (a *App) SetEngine(engine *Engine) error {

@@ -16,14 +16,14 @@ const (
 )
 
 type ScheduleMessagePayload struct {
-	Name string
-	Args interface{}
+	ManifestID xid.ID
+	Args       any
 }
 
-func NewScheduleMessage(name string, args interface{}) message.Message {
+func NewScheduleMessage(id xid.ID, args any) message.Message {
 	return message.New(MSchedule, &ScheduleMessagePayload{
-		Name: name,
-		Args: args,
+		ManifestID: id,
+		Args:       args,
 	})
 }
 
@@ -38,32 +38,38 @@ func NewScheduledMessage(name string, id, parentID xid.ID) message.Message {
 }
 
 type ProgressMessagePayload struct {
-	ID      xid.ID
-	Current int
-	Max     int
+	ManifestID xid.ID
+	HandleID   xid.ID
+	Current    int
+	Max        int
 }
 
-func NewProgressMessage(id xid.ID, current, max int) message.Message {
-	return message.New(MProgress, &ProgressMessagePayload{ID: id, Current: current, Max: max})
+func NewProgressMessage(id, handleID xid.ID, current, max int) message.Message {
+	return message.New(MProgress, &ProgressMessagePayload{ManifestID: id, Current: current, Max: max})
 }
 
 type SuccessMessagePayload struct {
-	ID xid.ID
+	ManifestID xid.ID
+	HandleID   xid.ID
 }
 
-func NewSuccessMessage(id xid.ID) message.Message {
-	return message.New(MSuccess, &SuccessMessagePayload{ID: id})
+func NewSuccessMessage(id, handleID xid.ID) message.Message {
+	return message.New(MSuccess, &SuccessMessagePayload{
+		ManifestID: id,
+		HandleID:   handleID,
+	})
 }
 
 type FailureMessagePayload struct {
-	ID     xid.ID
-	Reason string
+	ManifestID xid.ID
+	HandleID   xid.ID
+	Error      error
 }
 
-func NewFailureMessage(id xid.ID, err error) message.Message {
-	return message.New(MFailure, &FailureMessagePayload{ID: id, Reason: err.Error()})
-}
-
-type SuperviseMessagePayload struct {
-	ScheduleMessagePayload
+func NewFailureMessage(id, handleID xid.ID, err error) message.Message {
+	return message.New(MFailure, &FailureMessagePayload{
+		ManifestID: id,
+		HandleID:   handleID,
+		Error:      err,
+	})
 }

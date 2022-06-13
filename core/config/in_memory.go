@@ -13,17 +13,17 @@ import (
 
 type InMemoryConfig struct {
 	sync.RWMutex
-	Values    map[interface{}]interface{}
-	queryable map[string]interface{}
+	Values    map[any]any
+	queryable map[string]any
 }
 
-func NewInMemoryConfig(values ...map[interface{}]interface{}) *InMemoryConfig {
+func NewInMemoryConfig(values ...map[any]any) *InMemoryConfig {
 	if len(values) > 0 {
 		return &InMemoryConfig{Values: values[0]}
 	}
 	return &InMemoryConfig{
-		Values:    make(map[interface{}]interface{}),
-		queryable: make(map[string]interface{}),
+		Values:    make(map[any]any),
+		queryable: make(map[string]any),
 	}
 }
 
@@ -42,7 +42,7 @@ func (i *InMemoryConfig) Merge(ctx context.Context, configurable Configurable) (
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "unable to get config values from input configurable")
 	}
-	mappable, ok := allValues.(map[string]interface{})
+	mappable, ok := allValues.(map[string]any)
 	if !ok {
 		return nil, stacktrace.Propagate(err, "underlying config implementation is not mergeable")
 	}
@@ -50,7 +50,7 @@ func (i *InMemoryConfig) Merge(ctx context.Context, configurable Configurable) (
 	return NewInMemoryConfig(set.Merge(set.AsMapInterfaceInterface(mappable), i.Values)), nil
 }
 
-func (i *InMemoryConfig) Get(ctx context.Context, key string) (interface{}, error) {
+func (i *InMemoryConfig) Get(ctx context.Context, key string) (any, error) {
 	query, err := gojq.Parse(key)
 	if err != nil {
 		return nil, stacktrace.NewError("not a valid key: (invalid jq query)")

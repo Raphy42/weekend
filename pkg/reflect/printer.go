@@ -4,10 +4,10 @@ import (
 	"fmt"
 )
 
-func SPrint(value interface{}) string {
+func SPrint(value any) string {
 	return Signature(value)
 }
 
-func Signature(value interface{}) string {
+func Signature(value any) string {
 	return fmt.Sprintf("%T", value)
 }

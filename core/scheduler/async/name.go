@@ -1,4 +1,4 @@
-package schedulable
+package async
 
 import (
 	"strings"

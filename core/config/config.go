@@ -17,7 +17,7 @@ const (
 type Configurable interface {
 	Refresh(ctx context.Context) error
 	Merge(ctx context.Context, configurable Configurable) (Configurable, error)
-	Get(ctx context.Context, key string) (interface{}, error)
+	Get(ctx context.Context, key string) (any, error)
 }
 
 //type Facade interface {

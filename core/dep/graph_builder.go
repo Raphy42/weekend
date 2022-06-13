@@ -17,15 +17,15 @@ import (
 
 type GraphBuilder struct {
 	registry             *Registry
-	factoryCandidates    []interface{}
-	sideEffectCandidates []interface{}
+	factoryCandidates    []any
+	sideEffectCandidates []any
 }
 
 func NewGraphBuilder() *GraphBuilder {
 	return &GraphBuilder{
 		registry:             NewRegistry(),
-		factoryCandidates:    make([]interface{}, 0),
-		sideEffectCandidates: make([]interface{}, 0),
+		factoryCandidates:    make([]any, 0),
+		sideEffectCandidates: make([]any, 0),
 	}
 }
 

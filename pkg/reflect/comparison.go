@@ -1,6 +1,6 @@
 package reflect
 
-func SameType(a, b interface{}) bool {
+func SameType(a, b any) bool {
 	if a == nil || b == nil {
 		return false
 	}

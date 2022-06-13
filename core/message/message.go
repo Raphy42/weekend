@@ -9,10 +9,10 @@ import (
 type Message struct {
 	ID      xid.ID
 	Kind    string
-	Payload interface{}
+	Payload any
 }
 
-func New(kind string, payload interface{}) Message {
+func New(kind string, payload any) Message {
 	return Message{
 		ID:      xid.New(),
 		Kind:    kind,

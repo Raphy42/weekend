@@ -79,13 +79,12 @@ func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) e
 	// two choices
 	// (*T, error)		-> FuncT.CallResult
 	// *T & the rest	-> FuncT.Call
-	var result interface{}
+	var result any
 	if funcT.ReturnsResult() {
 		result, err = funcT.CallResult(args...)
 	} else if len(funcT.Outs) == 1 {
 		result, err = funcT.Call(args...)
 	}
-	log.Debug("underlying function called via reflection")
 
 	if len(funcT.Outs) == 0 && dependency.Kind() == Factory {
 		log.Warn("factory has no outputs, it should be declared a side effect instead")

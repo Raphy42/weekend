@@ -5,6 +5,8 @@ import (
 	"sync"
 
 	"github.com/palantir/stacktrace"
+
+	"github.com/Raphy42/weekend/core/logger"
 )
 
 //Send reduces boilerplate for blocking unbuffered channels and ensures propagation of context termination
@@ -41,5 +43,10 @@ func Multicast[T any](parent context.Context, in <-chan T, outs ...chan<- T) con
 		}
 	}()
 
-	return cancel
+	return func() {
+		log := logger.FromContext(parent)
+
+		log.Warn("reader context canceled")
+		cancel()
+	}
 }

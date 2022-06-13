@@ -6,7 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel"
 
-	"github.com/Raphy42/weekend/core/scheduler/schedulable"
+	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
 type Container struct {
@@ -22,7 +22,7 @@ func NewContainer(name string) *Container {
 	}
 }
 
-func (c *Container) start(ctx context.Context) (interface{}, error) {
+func (c *Container) start(ctx context.Context) (any, error) {
 	ctx, span := otel.Tracer("wk.core.dep").Start(ctx, "Container.start")
 
 	defer span.End()
@@ -41,9 +41,9 @@ func (c *Container) Use(modules ...Module) *Container {
 	return c
 }
 
-func (c *Container) Manifest() schedulable.Manifest {
-	return schedulable.Of(
-		schedulable.Name("container", c.name),
+func (c *Container) Manifest() async.Manifest {
+	return async.Of(
+		async.Name("container", c.name),
 		c.start,
 	)
 }

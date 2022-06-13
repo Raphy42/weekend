@@ -5,17 +5,16 @@ import (
 
 	"github.com/palantir/stacktrace"
 	"github.com/rs/xid"
+	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/message"
+	"github.com/Raphy42/weekend/pkg/runtime"
 )
 
-var (
-	mainID = xid.New()
+const (
+	schedulerInjectionKey = "wk.context.scheduler"
 )
-
-func IsMainProcessID(id xid.ID) bool {
-	return id.Compare(mainID) == 0
-}
 
 type Context struct {
 	context.Context
@@ -26,15 +25,28 @@ type Context struct {
 
 func NewContext(parent context.Context, parentID xid.ID) *Context {
 	ctx, cancel := context.WithCancel(parent)
+
 	return &Context{
 		Context: ctx,
-		Cancel:  cancel,
-		Parent:  parentID,
+		Cancel: func() {
+			log := logger.FromContext(parent)
+			frame := runtime.Frame(1)
+
+			log.Warn("scheduling context cancelled",
+				zap.String("caller", frame.Caller),
+				zap.Int("line", frame.Line),
+				zap.String("filename", frame.Filename),
+			)
+
+			cancel()
+		},
+		Parent: parentID,
 	}
 }
 
 func (c *Context) BindScheduler(scheduler *Scheduler) {
 	c.Scheduler = scheduler
+	c.Context = context.WithValue(c.Context, schedulerInjectionKey, scheduler)
 }
 
 func ParentID(ctx context.Context) xid.ID {
@@ -44,7 +56,7 @@ func ParentID(ctx context.Context) xid.ID {
 	case Context:
 		return v.Parent
 	default:
-		return mainID
+		return xid.NilID()
 	}
 }
 

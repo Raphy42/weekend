@@ -6,7 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel"
 
-	"github.com/Raphy42/weekend/core/scheduler/schedulable"
+	"github.com/Raphy42/weekend/core/scheduler/async"
 	"github.com/Raphy42/weekend/pkg/reflect"
 )
 
@@ -14,9 +14,9 @@ type lock struct {
 	ctx context.Context
 }
 
-func Lock(topCtx context.Context) schedulable.Manifest {
-	return schedulable.Of(
-		schedulable.Name("wk.context.lock", reflect.Typename(topCtx)),
+func Lock(topCtx context.Context) async.Manifest {
+	return async.Of(
+		async.Name("wk.context.lock", reflect.Typename(topCtx)),
 		func(runningCtx context.Context) error {
 			runningCtx, span := otel.Tracer("wk.scheduler").Start(runningCtx, "lock")
 			defer span.End()

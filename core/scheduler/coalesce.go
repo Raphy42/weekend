@@ -10,7 +10,7 @@ import (
 
 type CoalescedResult struct {
 	Origin xid.ID
-	Value  interface{}
+	Value  any
 	Error  error
 }
 

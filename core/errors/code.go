@@ -34,7 +34,7 @@ const (
 	DDependency = 0x0900
 	//DSynchro is an error domain related to synchronisation semantics (context, mutex, etc...)
 	DSynchro = 0x0a00
-	//DType is an error domain related to the type system (interface{}, reflection, etc...)
+	//DType is an error domain related to the type system (any, reflection, etc...)
 	DType = 0x0b00
 	//DValue is an error domain related to values
 	DValue = 0x0c00
@@ -57,6 +57,8 @@ const (
 	AUnimplemented = 0x0080
 	//ANil is an error axiom for nil values
 	ANil = 0x0090
+	//ATimeout is an error relating to time outs
+	ATimeout = 0x00a0
 )
 
 func init() {
@@ -82,7 +84,8 @@ func init() {
 		RegisterAxiom(AUnexpected, "unexpected").
 		RegisterAxiom(AUnreachable, "unreachable").
 		RegisterAxiom(AUnimplemented, "unimplemented").
-		RegisterAxiom(ANil, "nil")
+		RegisterAxiom(ANil, "nil").
+		RegisterAxiom(ATimeout, "timeout")
 }
 
 // Error code bit structure
