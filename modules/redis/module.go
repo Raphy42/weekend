@@ -44,6 +44,7 @@ func clientFactory(ctx context.Context, cfg *config.Config, _ *app.EngineBuilder
 		return nil, stacktrace.NewErrorWithCode(errors.EUnreachable, "unexpected redis mode: '%s'", conf.Mode)
 	}
 
+	inner = inner.WithContext(ctx)
 	inner.AddHook(redisotel.NewTracingHook())
 
 	return &Client{

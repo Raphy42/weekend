@@ -9,7 +9,6 @@ import (
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 
-	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -31,7 +30,7 @@ func NewGraphBuilder() *GraphBuilder {
 }
 
 func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, error) {
-	ctx, span := otel.Tracer(core.Name()).Start(ctx, "GraphBuilder.Build")
+	ctx, span := otel.Tracer("wk.core.dep").Start(ctx, "GraphBuilder.Build")
 	defer span.End()
 
 	log := logger.FromContext(ctx)

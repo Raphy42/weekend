@@ -7,7 +7,7 @@ require (
 	github.com/fatih/structtag v1.2.0
 	github.com/getsentry/sentry-go v0.13.0
 	github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-beta.1
-	github.com/go-redis/redis/v8 v8.11.5
+	github.com/go-redis/redis/v9 v9.0.0-beta.1
 	github.com/heimdalr/dag v1.1.1
 	github.com/itchyny/gojq v0.12.8
 	github.com/palantir/stacktrace v0.0.0-20161112013806-78658fd2d177
@@ -32,7 +32,6 @@ require (
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-redis/redis/extra/rediscmd/v9 v9.0.0-beta.1 // indirect
-	github.com/go-redis/redis/v9 v9.0.0-beta.1 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/uuid v1.1.2 // indirect
 	github.com/itchyny/timefmt-go v0.1.3 // indirect

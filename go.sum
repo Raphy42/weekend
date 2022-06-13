@@ -49,8 +49,6 @@ github.com/go-redis/redis/extra/rediscmd/v9 v9.0.0-beta.1 h1:WmZAvFwl6FigSO8/4wB
 github.com/go-redis/redis/extra/rediscmd/v9 v9.0.0-beta.1/go.mod h1:4t3OHmoQM4vlE7/pXwFfOhm8jtKBUP+L2BE1aoPBH9Y=
 github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-beta.1 h1:sVXzQYjQEBTRox5ezezt+YZ5wLH+IqtUMssSv86zGKk=
 github.com/go-redis/redis/extra/redisotel/v9 v9.0.0-beta.1/go.mod h1:luD6q887Lzq30fMQf04fiwRF10WWJercFUeEsVN/ZX0=
-github.com/go-redis/redis/v8 v8.11.5 h1:AcZZR7igkdvfVmQTPnu9WE37LRrO/YrBH5zWyjDC0oI=
-github.com/go-redis/redis/v8 v8.11.5/go.mod h1:gREzHqY1hg6oD9ngVRbLStwAWKhA0FEgq8Jd4h5lpwo=
 github.com/go-redis/redis/v9 v9.0.0-beta.1 h1:oW3jlPic5HhGUbYMH0lidnP+72BgsT+lCwlVud6o2Mc=
 github.com/go-redis/redis/v9 v9.0.0-beta.1/go.mod h1:6gNX1bXdwkpEG0M/hEBNK/Fp8zdyCkjwwKc6vBbfCDI=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=

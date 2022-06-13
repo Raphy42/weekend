@@ -57,7 +57,7 @@ func (a *App) module() dep.Module {
 }
 
 func (a *App) Start(rootCtx context.Context) error {
-	rootCtx, span := otel.Tracer(a.name).Start(rootCtx, "App.Start")
+	rootCtx, span := otel.Tracer("wk.core.app").Start(rootCtx, "App.Start")
 	defer span.End()
 
 	log := logger.FromContext(rootCtx).With(zap.String("wk.app", a.name))
@@ -83,21 +83,31 @@ func (a *App) Start(rootCtx context.Context) error {
 	}
 	log.Debug("global start hooks ran successfully", zap.Duration("wk.init.duration", timer.Elapsed()))
 
+	span.AddEvent("wk.container.scheduled")
 	handle, err := a.scheduler.Schedule(ctx, a.container.Manifest(), nil)
 	if err != nil {
 		return stacktrace.Propagate(err, "unable to schedule container")
 	}
+
+	span.AddEvent("wk.handle.polling")
 	_, err = handle.Poll(ctx)
 	if err != nil {
 		return stacktrace.Propagate(err, "container bootstrap returned non-nil error")
 	}
+
+	handle, err = a.scheduler.Schedule(ctx, a.engine.Manifest(), nil)
+	if err != nil {
+		return stacktrace.Propagate(err, "unable to schedule engine")
+	}
+	_, err = handle.Poll(ctx)
+
 	log.Info("application initialised", zap.Duration("wk.init.duration", timer.Elapsed()))
 
 	return nil
 }
 
 func (a *App) Wait(ctx context.Context) <-chan error {
-	ctx, span := otel.Tracer(a.name).Start(ctx, "App.Wait")
+	ctx, span := otel.Tracer("wk.core.app").Start(ctx, "App.Wait")
 	defer span.End()
 
 	result := make(chan error)

@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 
+	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/logger"
@@ -20,6 +21,9 @@ func (e *Engine) Manifest() schedulable.Manifest {
 	return schedulable.Of(
 		schedulable.Name("wk.app.engine"),
 		func(ctx context.Context) error {
+			ctx, span := otel.Tracer("wk.app.engine").Start(ctx, "run")
+			defer span.End()
+
 			log := logger.FromContext(ctx)
 
 			log.Debug("engine starting up")
@@ -34,6 +38,9 @@ func (e *Engine) Manifest() schedulable.Manifest {
 			}
 			result := scheduler.Coalesce(ctx, handles...)
 			go func() {
+				ctx, span := otel.Tracer("wk.app.engine").Start(ctx, "goroutine")
+				defer span.End()
+
 				for {
 					select {
 					case <-ctx.Done():

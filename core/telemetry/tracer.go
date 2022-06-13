@@ -2,7 +2,6 @@ package telemetry
 
 import (
 	"context"
-	"runtime"
 
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel/exporters/jaeger"
@@ -30,7 +29,7 @@ func NewJaegerTracer(ctx context.Context) (*trace.TracerProvider, error) {
 		trace.WithResource(resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceNameKey.String(core.Name()),
-			semconv.ServiceVersionKey.String(runtime.Version()),
+			semconv.ServiceVersionKey.String("v0.0.0"),
 		)),
 		trace.WithSampler(trace.AlwaysSample()),
 	), nil

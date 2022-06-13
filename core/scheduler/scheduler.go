@@ -44,7 +44,7 @@ func Schedule(ctx context.Context, manifest schedulable.Manifest, args interface
 }
 
 func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manifest, args interface{}) (*Handle, error) {
-	parent, span := otel.Tracer("scheduler.Scheduler").Start(parent, manifest.ID.String())
+	parent, span := otel.Tracer("wk.core.schedule").Start(parent, "schedule")
 	span.SetAttributes(
 		attribute.String("wk.manifest.name", manifest.Name),
 		attribute.Stringer("wk.manifest.id", manifest.ID),
@@ -67,7 +67,8 @@ func (s *Scheduler) Schedule(parent context.Context, manifest schedulable.Manife
 	log.Debug("scheduling function")
 	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, handle.ID, handle.Parent))
 	go func(ctx context.Context, resultC chan<- interface{}, errC chan<- error, f schedulable.Fn, in interface{}, bus message.Bus) {
-		ctx, goRoutineSpan := otel.Tracer("scheduler.goroutine").Start(ctx, manifest.Name)
+		ctx, goRoutineSpan := otel.Tracer("wk.core.schedule").Start(ctx, "goroutine")
+		goRoutineSpan.SetAttributes(attribute.String("wk.manifest.name", manifest.Name))
 		defer goRoutineSpan.End()
 		// todo install telemetry
 		defer errors.InstallPanicObserver()

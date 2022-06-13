@@ -6,6 +6,7 @@ import (
 
 	"github.com/rs/xid"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 
 	"github.com/Raphy42/weekend/core/scheduler/schedulable"
 )
@@ -34,7 +35,12 @@ func NewHandle(ctx context.Context, parent xid.ID) (*Handle, chan<- interface{},
 }
 
 func (h Handle) Poll(ctx context.Context) (interface{}, error) {
-	ctx, span := otel.Tracer("Handle.Poll").Start(ctx, h.ID.String())
+	ctx, span := otel.Tracer("wk.core.scheduler").Start(ctx, "poll")
+	span.SetAttributes(
+		attribute.Stringer("wk.handle.id", h.ID),
+		attribute.Stringer("wk.parent.id", h.Parent),
+		attribute.String("wk.manifest.name", h.Manifest().Name),
+	)
 	defer span.End()
 
 	select {

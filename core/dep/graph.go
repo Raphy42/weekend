@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
-	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -26,7 +25,7 @@ func NewGraph(dag *dag.DAG, registry *Registry) *Graph {
 }
 
 func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) error {
-	ctx, span := otel.Tracer("Graph.executeDependency").Start(ctx, dependency.Name())
+	ctx, span := otel.Tracer("wk.core.dep").Start(ctx, dependency.Name())
 	defer span.End()
 
 	kindS := "factory"
@@ -64,6 +63,10 @@ func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) e
 				instance.Name(), idx, dependency.Name(),
 			)
 		}
+		if instance.Name() == "context.Context" {
+			instance.Solve(ctx, nil)
+		}
+
 		argValue, err := instance.Value()
 		if err != nil {
 			return stacktrace.Propagate(err,
@@ -115,8 +118,7 @@ func (g *Graph) childrenFactories(dependency *Dependency) ([]*Dependency, error)
 	for _, id := range children {
 		dep, ok := g.registry.FindByName(id)
 		if !ok {
-			// todo error
-			return nil, stacktrace.NewError("TODO")
+			return nil, stacktrace.NewError("factory not previously registered")
 		}
 		if dep.Kind() == Factory {
 			deps = append(deps, dep)
@@ -128,7 +130,7 @@ func (g *Graph) childrenFactories(dependency *Dependency) ([]*Dependency, error)
 // Solve solves the dependency DAG and instantiate it
 // todo: a working algorithm with no hacks
 func (g *Graph) Solve(ctx context.Context) error {
-	ctx, span := otel.Tracer(core.Name()).Start(ctx, "Graph.solve")
+	ctx, span := otel.Tracer("wk.core.dep").Start(ctx, "Graph.solve")
 	defer span.End()
 
 	log := logger.FromContext(ctx)
