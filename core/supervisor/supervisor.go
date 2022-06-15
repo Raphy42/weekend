@@ -2,6 +2,7 @@ package supervisor
 
 import (
 	"context"
+	"time"
 
 	"github.com/palantir/stacktrace"
 	"github.com/rs/xid"
@@ -34,7 +35,7 @@ func New(name string, children ...Spec) *Supervisor {
 		name:      name,
 		bus:       bus,
 		scheduler: sched,
-		specLut: set.CollectMap(children, func(spec Spec) (xid.ID, *Spec) {
+		specLut: set.From(children, func(spec Spec) (xid.ID, *Spec) {
 			return spec.Manifest.ID, &spec
 		}),
 		children: make(map[xid.ID]*scheduler.Handle),
@@ -74,8 +75,9 @@ func (s *Supervisor) restart(ctx context.Context, id, handleID xid.ID, cause err
 	ctx, span := otel.Tracer("wk.core.supervisor").Start(ctx, "restart")
 	defer span.End()
 
-	log := logger.FromContext(ctx)
+	log := logger.FromContext(ctx).With(zap.Stringer("wk.manifest.id", id))
 
+	log.Info("trying to restart process")
 	spec, ok := s.specLut[id]
 	if !ok {
 		return stacktrace.Propagate(cause, "retry: manifest '%s' has no associated spec", id)
@@ -89,6 +91,7 @@ func (s *Supervisor) restart(ctx context.Context, id, handleID xid.ID, cause err
 
 	counter := s.restarts[id].Inc()
 	if counter > 3 {
+		log.Error("maximum retry count exceeded")
 		return stacktrace.Propagate(cause, "retry: maximum count exceeded")
 	}
 
@@ -119,12 +122,19 @@ func (s *Supervisor) supervise(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.supervisor").Start(ctx, "supervise")
 	defer span.End()
 
+	log := logger.FromContext(ctx).With(zap.String("wk.supervisor.name", s.name))
+	log.Debug("supervisor started")
+
 	messages, cancel := s.bus.Read(ctx)
 	defer cancel()
 
 	for {
 		select {
 		case <-ctx.Done():
+			log.Info("supervisor terminating")
+			shutdownCtx, cancelTmp := context.WithTimeout(context.Background(), time.Second*5)
+			s.terminateChildren(shutdownCtx)
+			cancelTmp()
 			return nil
 		case msg := <-messages:
 			payload := msg.Payload

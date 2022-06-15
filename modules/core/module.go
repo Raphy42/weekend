@@ -15,10 +15,10 @@ func Module(opts ...ModuleOption) dep.Module {
 	return dep.Declare(
 		ModuleName,
 		dep.Factories(
-			healthProvider,
-			engineBuilderProvider,
-			applicationContextProvider(options.rootCtx),
-			configFromFilenamesProvider(options.configFilenames...),
+			healthFactory,
+			engineBuilderFactory,
+			applicationContextFactory(options.rootCtx),
+			configFromFilenamesFactory(options.configFilenames...),
 		),
 		dep.SideEffects(
 			platformInformation,

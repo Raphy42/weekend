@@ -4,11 +4,11 @@ import (
 	"context"
 	"strings"
 
-	"github.com/heimdalr/dag"
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/dep/topo"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -37,6 +37,7 @@ func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, er
 
 	// group by stage
 	for _, module := range modules {
+		log.Info("loading module", zap.String("wk.module", module.Name))
 		g.factoryCandidates = append(g.factoryCandidates, module.Factories...)
 		g.sideEffectCandidates = append(g.sideEffectCandidates, module.SideEffects...)
 	}
@@ -95,29 +96,28 @@ func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, er
 		}
 	}
 
-	graph := dag.NewDAG()
 	allDeps := g.registry.Kind(allDependencyKinds...)
+	topoGraph := topo.New()
 
 	// add all vertices to DAG
 	for _, dependency := range allDeps {
-		if err := graph.AddVertexByID(dependency.Name(), dependency); err != nil {
-			return nil, stacktrace.Propagate(err, "could not add node '%s' to DAG", dependency.ID())
-		}
+		topoGraph.AddNode(dependency.Name())
 	}
 
 	// add all edges to DAG
 	for from, tos := range edges {
 		for _, to := range tos {
-			if err := graph.AddEdge(from, to); err != nil {
-				return nil, stacktrace.Propagate(err, "could not add edge: %s -> %s", from, to)
-			}
+			topoGraph.AddEdge(from, to)
 		}
 	}
 
 	// validate the graph by confirming that all root dependencies are factories
 	var errs errors.Group
-	for _, dependency := range graph.GetRoots() {
-		dep := dependency.(*Dependency)
+	for _, dependency := range topoGraph.Roots() {
+		dep, ok := g.registry.FindByName(dependency)
+		if !ok {
+			panic("invalid dependency")
+		}
 		if !dep.HasIO() {
 			name := dep.Name()
 			if !strings.HasPrefix(name, "*") {
@@ -132,5 +132,5 @@ func (g *GraphBuilder) Build(ctx context.Context, modules ...Module) (*Graph, er
 		}
 	}
 
-	return NewGraph(graph, g.registry), errs.Coalesce()
+	return NewGraph(topoGraph, g.registry), errs.Coalesce()
 }

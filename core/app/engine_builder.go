@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/palantir/stacktrace"
+	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/scheduler/async"
 	"github.com/Raphy42/weekend/core/supervisor"
+	"github.com/Raphy42/weekend/pkg/chrono"
 	"github.com/Raphy42/weekend/pkg/reflect"
 	"github.com/Raphy42/weekend/pkg/std/slice"
 )
@@ -28,23 +31,24 @@ func (e *EngineBuilder) Background(manifests ...async.Manifest) *EngineBuilder {
 }
 
 func (e *EngineBuilder) HealthCheck(service any, interval time.Duration, fn func(ctx context.Context) error) *EngineBuilder {
+	typename := reflect.Typename(service)
 	e.Background(async.Of(
-		async.Name("wk", reflect.Typename(service), "health_check"),
+		async.Name("wk", typename, "health_check"),
 		func(ctx context.Context) error {
-			timer := time.NewTicker(interval)
-			for {
-				select {
-				case <-ctx.Done():
-					return nil
-				case <-timer.C:
-					if err := fn(ctx); err != nil {
-						return stacktrace.Propagate(
-							err,
-							"health_check failed for '%T'", service,
-						)
+			log := logger.FromContext(ctx).With(zap.String("service", typename))
+			log.Info("healthcheck started")
+
+			return <-chrono.NewTicker(interval).
+				TickErr(ctx, func() error {
+					err := fn(ctx)
+					if err != nil {
+						log.Error("health check failed", zap.Error(err))
 					}
-				}
-			}
+					return stacktrace.Propagate(
+						err,
+						"health_check failed for '%T'", service,
+					)
+				})
 		},
 	))
 	return e

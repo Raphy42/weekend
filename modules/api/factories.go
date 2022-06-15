@@ -13,7 +13,7 @@ var (
 	ConfHttpServerAddr = config.Key("server", "listen")
 )
 
-func ginEngineProvider(ctx context.Context, conf *config.Config, engine *app.EngineBuilder) (*Server, error) {
+func ginEngineFactory(ctx context.Context, conf *config.Config, engine *app.EngineBuilder) (*Server, error) {
 	addr, err := conf.String(ctx, ConfHttpServerAddr, ":8080")
 	if err != nil {
 		return nil, err

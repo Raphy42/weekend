@@ -6,8 +6,21 @@ import (
 	"os"
 
 	"github.com/palantir/stacktrace"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+)
+
+var (
+	globalLevel = atomic.NewInt32(int32(LDebug))
+)
+
+func SetLevel(level Level) {
+	globalLevel.Store(int32(level))
+}
+
+type (
+	Level = zapcore.Level
 )
 
 const (
@@ -20,31 +33,16 @@ const (
 	LFatal   = zapcore.FatalLevel
 )
 
+func enabler() zap.LevelEnablerFunc {
+	return func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.Level(globalLevel.Load())
+	}
+}
+
+// do not migrate this to application OnStart hooks
+// as we need a correctly configured logger ASAP
 func init() {
-	logMode := os.Getenv("WEEKEND_LOG_MODE")
-	if logMode == "" {
-		logMode = "DEV"
-	}
-	var logger *zap.Logger
-	var err error
-
-	switch logMode {
-	case "DEV":
-		cfg := zap.NewDevelopmentConfig()
-		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		logger, err = cfg.Build()
-	case "PROD":
-		logger, err = zap.NewProduction()
-	default:
-		cfg := zap.NewDevelopmentConfig()
-		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
-		logger, err = cfg.Build()
-	}
-	if err != nil {
-		panic(stacktrace.Propagate(err, "unable to initialise root logger"))
-	}
-
-	zap.ReplaceGlobals(logger)
+	zap.ReplaceGlobals(New())
 }
 
 func New(opts ...Option) *zap.Logger {
@@ -57,8 +55,31 @@ func New(opts ...Option) *zap.Logger {
 	//if options.Name != "" {
 	//	name = options.Name
 	//}
+	logMode := os.Getenv("WEEKEND_LOG_MODE")
+	if logMode == "" {
+		logMode = "DEV"
+	}
+	var logger *zap.Logger
+	var err error
 
-	return zap.L()
+	switch logMode {
+	case "DEV":
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.Level(globalLevel.Load()))
+		logger, err = cfg.Build()
+	case "PROD":
+		logger, err = zap.NewProduction()
+	default:
+		cfg := zap.NewDevelopmentConfig()
+		cfg.EncoderConfig.EncodeLevel = zapcore.CapitalColorLevelEncoder
+		cfg.Level = zap.NewAtomicLevelAt(zapcore.Level(globalLevel.Load()))
+		logger, err = cfg.Build()
+	}
+	if err != nil {
+		panic(stacktrace.Propagate(err, "unable to initialise logger"))
+	}
+	return logger
 }
 
 func ctxDecorator(ctx context.Context) []Option {

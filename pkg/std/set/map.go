@@ -42,13 +42,25 @@ func Values[K comparable, V any](a map[K]V) []V {
 	return items
 }
 
-func CollectMap[K comparable, T, V any](slice []T, fn func(item T) (K, V)) map[K]V {
+func From[K comparable, T, V any](slice []T, fn func(item T) (K, V)) map[K]V {
 	set := make(map[K]V)
 	for _, item := range slice {
 		k, v := fn(item)
 		set[k] = v
 	}
 	return set
+}
+
+func CollectSlice[K comparable, T, V any](values map[K]V, fn func(k K, v V) (T, bool)) []T {
+	out := make([]T, 0)
+	for k, v := range values {
+		item, ok := fn(k, v)
+		if !ok {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
 }
 
 func Clone[K comparable, V any](values map[K]V) map[K]V {

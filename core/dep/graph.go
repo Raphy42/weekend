@@ -2,14 +2,13 @@ package dep
 
 import (
 	"context"
-	"sort"
 
-	"github.com/heimdalr/dag"
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.uber.org/zap"
 
+	"github.com/Raphy42/weekend/core/dep/topo"
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
@@ -17,11 +16,14 @@ import (
 
 type Graph struct {
 	registry *Registry
-	inner    *dag.DAG
+	topo     *topo.Graph
 }
 
-func NewGraph(dag *dag.DAG, registry *Registry) *Graph {
-	return &Graph{inner: dag, registry: registry}
+func NewGraph(topo *topo.Graph, registry *Registry) *Graph {
+	return &Graph{
+		registry: registry,
+		topo:     topo,
+	}
 }
 
 func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) error {
@@ -108,48 +110,29 @@ func (g *Graph) executeDependency(ctx context.Context, dependency *Dependency) e
 	return stacktrace.Propagate(err, "%s '%s' invocation failed", kindS, dependency.Name())
 }
 
-func (g *Graph) childrenFactories(dependency *Dependency) ([]*Dependency, error) {
-	deps := make([]*Dependency, 0)
-	children, err := g.inner.GetOrderedDescendants(dependency.Name())
-	if err != nil {
-		return nil, err
-	}
-	for _, id := range children {
-		dep, ok := g.registry.FindByName(id)
-		if !ok {
-			return nil, stacktrace.NewError("factory not previously registered")
-		}
-		if dep.Kind() == Factory {
-			deps = append(deps, dep)
-		}
-	}
-	return deps, nil
-}
-
 // Solve solves the dependency DAG and instantiate it
-// todo: a working algorithm with no hacks
+// todo: check that toposort works
 func (g *Graph) Solve(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.dep").Start(ctx, "Graph.solve")
 	defer span.End()
 
 	log := logger.FromContext(ctx)
-	registeredFactories := g.registry.Kind(Factory)
 
-	sort.Slice(registeredFactories, func(i, j int) bool {
-		a := registeredFactories[i]
-		b := registeredFactories[j]
+	sortedNodes, ok := g.topo.TopologicalSort()
+	if !ok {
+		return stacktrace.NewError("topological sort failed")
+	}
+	orderedFactories := make([]*Dependency, 0)
+	for _, node := range sortedNodes {
+		dependency, ok := g.registry.FindByName(node)
+		if !ok {
+			return stacktrace.NewError("dependency should be registered at this point")
+		}
+		if dependency.Kind() == Factory {
+			orderedFactories = append(orderedFactories, dependency)
+		}
+	}
 
-		aD, err := g.inner.GetOrderedAncestors(a.Name())
-		span.RecordError(err)
-		errors.Must(err)
-
-		bD, err := g.inner.GetOrderedAncestors(b.Name())
-		span.RecordError(err)
-		errors.Must(err)
-		return len(aD) < len(bD)
-	})
-
-	orderedFactories := registeredFactories
 	for idx, factory := range orderedFactories {
 		if err := g.executeDependency(ctx, factory); err != nil {
 			span.RecordError(err)

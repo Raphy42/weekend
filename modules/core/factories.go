@@ -10,21 +10,21 @@ import (
 	"github.com/Raphy42/weekend/core/service"
 )
 
-func engineBuilderProvider() *app.EngineBuilder {
+func engineBuilderFactory() *app.EngineBuilder {
 	return app.NewEngineBuilder()
 }
 
-func applicationContextProvider(ctx context.Context) func() context.Context {
+func applicationContextFactory(ctx context.Context) func() context.Context {
 	return func() context.Context {
 		return ctx
 	}
 }
 
-func healthProvider() *service.Registry {
+func healthFactory() *service.Registry {
 	return service.NewRegistry()
 }
 
-func configFromFilenamesProvider(filenames ...string) func(ctx context.Context) (*config.Config, error) {
+func configFromFilenamesFactory(filenames ...string) func(ctx context.Context) (*config.Config, error) {
 	return func(ctx context.Context) (*config.Config, error) {
 		cfg, err := configFromFilenames(ctx, filenames...)
 		if err != nil {

@@ -6,9 +6,11 @@ import (
 
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/errors"
+	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/telemetry"
 	"github.com/Raphy42/weekend/modules/api"
 	"github.com/Raphy42/weekend/modules/core"
+	"github.com/Raphy42/weekend/modules/gorm"
 	"github.com/Raphy42/weekend/modules/redis"
 )
 
@@ -19,6 +21,7 @@ import (
 const name = "chat.api"
 
 func main() {
+	logger.SetLevel(logger.LInfo)
 
 	defer errors.InstallPanicObserver()
 
@@ -34,6 +37,7 @@ func main() {
 			),
 			redis.Module(),
 			api.Module(),
+			gorm.Module(),
 		),
 	)
 	errors.Mustf(err, "could not create application")

@@ -112,7 +112,7 @@ func (a *App) Wait(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.app").Start(ctx, "App.Wait")
 	defer span.End()
 
-	result := make(chan error)
+	result := make(chan error, 1)
 	if a.engine == nil {
 		errors.Must(channel.Send(ctx, stacktrace.NewError("application is missing `core.Module()`"), result))
 	}
