@@ -15,9 +15,12 @@ import (
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/scheduler"
+	"github.com/Raphy42/weekend/core/service"
 	"github.com/Raphy42/weekend/pkg/channel"
 	"github.com/Raphy42/weekend/pkg/chrono"
 )
+
+//todo reduce internal dependencies bloat from the application object
 
 type App struct {
 	name         string
@@ -27,6 +30,7 @@ type App struct {
 	container    *dep.Container
 	scheduler    *scheduler.Scheduler
 	engineHandle *scheduler.Handle
+	healthProbe  <-chan service.Health
 	engine       *Engine
 }
 
@@ -63,6 +67,10 @@ func (a *App) Start(rootCtx context.Context) error {
 
 	log := logger.FromContext(rootCtx).With(zap.String("wk.app", a.name))
 	log.Info("starting application")
+
+	if err := executeOnStart(); err != nil {
+		return stacktrace.Propagate(err, "global application stopping hooks could not be run successfully")
+	}
 
 	timer := chrono.NewChrono()
 	timer.Start()
@@ -117,18 +125,16 @@ func (a *App) Wait(ctx context.Context) error {
 		errors.Must(channel.Send(ctx, stacktrace.NewError("application is missing `core.Module()`"), result))
 	}
 
-	defer func() {
-		if err := executeOnStart(); err != nil {
-			panic(stacktrace.Propagate(err, "global application stopping hooks could not be run successfully"))
-		}
-	}()
-
 	if a.ctx == nil {
 		panic(stacktrace.NewError("application has not been started prior to polling (missing `App.Start`)"))
 	}
 
 	go func() {
 		select {
+		case health := <-a.healthProbe:
+			if health.Error != nil {
+				errors.Must(channel.Send(ctx, health.Error, result))
+			}
 		case err := <-a.engineHandle.Error():
 			errors.Must(channel.Send(ctx, err, result))
 		case <-a.ctx.Done():
@@ -138,6 +144,7 @@ func (a *App) Wait(ctx context.Context) error {
 		}
 	}()
 
+	//todo actually execute this synchronously
 	defer a.engineHandle.Cancel()
 	defer func() {
 		span.RecordError(executeOnStop())
@@ -149,4 +156,8 @@ func (a *App) Wait(ctx context.Context) error {
 func (a *App) SetEngine(engine *Engine) error {
 	a.engine = engine
 	return nil
+}
+
+func (a *App) SetRegistry(registry *service.Registry) {
+	a.healthProbe = registry.HealthProbe()
 }

@@ -16,6 +16,8 @@ import (
 	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
+// todo handle the case where the bus is full
+
 type Scheduler struct {
 	sync.RWMutex
 	id  xid.ID

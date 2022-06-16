@@ -139,7 +139,7 @@ func (g *Graph) Solve(ctx context.Context) error {
 			return stacktrace.Propagate(err, "factory '%s' execution (step %d of %d) failed", factory.Name(), idx+1, len(orderedFactories)+1)
 		}
 	}
-	log.Info("all instances constructed")
+	log.Info("all instances constructed", zap.Int("wk.factory.count", len(orderedFactories)))
 
 	sideEffects := g.registry.Kind(SideEffect)
 	for idx, sideEffect := range sideEffects {
@@ -148,7 +148,7 @@ func (g *Graph) Solve(ctx context.Context) error {
 			return stacktrace.Propagate(err, "side effect '%s' execution (step %d of %d) failed", sideEffect.Name(), idx+1, len(sideEffects)+1)
 		}
 	}
-	log.Info("all side effects executed")
+	log.Info("all side effects executed", zap.Int("wk.side_effect.count", len(sideEffects)))
 
 	return nil
 }

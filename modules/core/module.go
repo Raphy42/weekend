@@ -23,6 +23,7 @@ func Module(opts ...ModuleOption) dep.Module {
 		dep.SideEffects(
 			platformInformation,
 			applicationEngineInjector,
+			applicationServiceHealthInjector,
 		),
 	)
 }

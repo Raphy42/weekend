@@ -6,7 +6,6 @@ import (
 
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/core/telemetry"
 	"github.com/Raphy42/weekend/modules/api"
 	"github.com/Raphy42/weekend/modules/core"
@@ -21,8 +20,6 @@ import (
 const name = "chat.api"
 
 func main() {
-	logger.SetLevel(logger.LInfo)
-
 	defer errors.InstallPanicObserver()
 
 	ctx, span := telemetry.Install(name).Start(context.Background(), "main")

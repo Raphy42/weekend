@@ -9,6 +9,7 @@ import (
 
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/logger"
+	"github.com/Raphy42/weekend/core/service"
 )
 
 func platformInformation(ctx context.Context) error {
@@ -22,6 +23,10 @@ func platformInformation(ctx context.Context) error {
 	)
 
 	return ctx.Err()
+}
+
+func applicationServiceHealthInjector(app *app.App, registry *service.Registry) {
+	app.SetRegistry(registry)
 }
 
 func applicationEngineInjector(ctx context.Context, app *app.App, builder *app.EngineBuilder) error {

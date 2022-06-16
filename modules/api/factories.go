@@ -7,13 +7,14 @@ import (
 
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/config"
+	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
 var (
 	ConfHttpServerAddr = config.Key("server", "listen")
 )
 
-func ginEngineFactory(ctx context.Context, conf *config.Config, engine *app.EngineBuilder) (*Server, error) {
+func ginEngineFactory(ctx context.Context, conf *config.Config, builder *app.EngineBuilder) (*Server, error) {
 	addr, err := conf.String(ctx, ConfHttpServerAddr, ":8080")
 	if err != nil {
 		return nil, err
@@ -23,5 +24,15 @@ func ginEngineFactory(ctx context.Context, conf *config.Config, engine *app.Engi
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
-	return newServer(&server, engine), nil
+
+	s := newServer(&server)
+	builder.Background(async.Of(
+		async.Name("wk.api.serve"),
+		s.listenAndServe,
+	))
+	builder.HealthCheck(s, time.Second*10, func(_ context.Context) error {
+		return nil
+	})
+
+	return s, nil
 }

@@ -26,14 +26,8 @@ const (
 	Factory Kind = iota
 	//SideEffect is a dependency which should be invoked whenever the DI system has finished bootstrapping.
 	SideEffect
-	//Transitive represent intermediate dependency state.
-	//For example a factory function outputting (*T, error) will be represented by a transitive dependency of value *T.
-	//The transitive will then be associated with an Instance or a Token depending on its resolution at runtime.
-	Transitive
 	//Instance represent the actual value of the dependency, used and created by both factories and transitives
 	Instance
-	//Token is a placeholder dependency, used to inject custom synchronisation logic in the DAG dependency solver.
-	Token
 )
 
 type Status int
@@ -75,23 +69,6 @@ func NewFactory(value any) (*Dependency, error) {
 	return newDependency(Factory, funcT), nil
 }
 
-type Transition struct {
-	sync.RWMutex
-	From  xid.ID
-	Value any
-}
-
-func (t *Transition) String() string {
-	t.RLock()
-	defer t.RUnlock()
-
-	return fmt.Sprintf("Transition.%s.%s", reflect.Typename(t.Value), t.From)
-}
-
-func NewResult(from xid.ID) (*Dependency, error) {
-	return newDependency(Transitive, &Transition{Value: nil, From: from}), nil
-}
-
 func NewSideEffect(value any) (*Dependency, error) {
 	funcT, err := reflect.Func(value)
 	if err != nil {
@@ -119,16 +96,12 @@ func NewInstance(kind reflect.Type) (*Dependency, error) {
 	}), nil
 }
 
-func NewToken(value string) (*Dependency, error) {
-	return newDependency(Token, &value), nil
-}
-
 func (d *Dependency) Solve(value any, err error) {
 	d.lock.Lock()
 	defer d.lock.Unlock()
 
 	d.lastError = err
-	if d.kind == Transitive || d.kind == Instance {
+	if d.kind == Instance {
 		if err != nil {
 			d.status = CorruptedStatus
 		} else {
@@ -172,18 +145,13 @@ func (d *Dependency) Name() string {
 	defer d.lock.RUnlock()
 
 	//todo refactor this mess with fmt.Stringer or generics
+	//todo implement and use a TypeID (need another global registry)
 	switch d.kind {
-	case Token:
-		v := d.value.(*string)
-		return *v
 	case Instance:
 		v := d.value.(*InstanceContainer)
 		return v.String()
 	case SideEffect, Factory:
 		v := d.value.(*reflect.FuncT)
-		return v.String()
-	case Transitive:
-		v := d.value.(*Transition)
 		return v.String()
 	}
 	panic(stacktrace.NewErrorWithCode(errors.EUnreachable, "unknown dependency kind"))

@@ -11,9 +11,15 @@ import (
 	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/config"
 	"github.com/Raphy42/weekend/core/errors"
+	"github.com/Raphy42/weekend/core/service"
 )
 
-func clientFactory(ctx context.Context, cfg *config.Config, _ *app.EngineBuilder) (*Client, error) {
+func clientFactory(
+	ctx context.Context,
+	cfg *config.Config,
+	builder *app.EngineBuilder,
+	health *service.Registry,
+) (*Client, error) {
 	conf, err := ConfigFrom(ctx, *cfg)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "invalid redis config")
@@ -43,8 +49,20 @@ func clientFactory(ctx context.Context, cfg *config.Config, _ *app.EngineBuilder
 	inner = inner.WithContext(ctx)
 	inner.AddHook(redisotel.NewTracingHook())
 
-	return &Client{
+	client := &Client{
 		inner: inner,
 		cfg:   conf,
-	}, nil
+	}
+	builder.HealthCheck(client, time.Second*5,
+		func(ctx context.Context) error {
+			if err := client.Ping(ctx); err != nil {
+				health.Set(client, err)
+				return err
+			}
+			health.Set(client, nil)
+			return nil
+		},
+	)
+
+	return client, nil
 }

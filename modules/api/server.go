@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -11,9 +10,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/Raphy42/weekend/core"
-	"github.com/Raphy42/weekend/core/app"
 	"github.com/Raphy42/weekend/core/logger"
-	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
 type Server struct {
@@ -30,7 +27,7 @@ func (s *Server) listenAndServe(ctx context.Context) error {
 	return s.server.ListenAndServe()
 }
 
-func newServer(server *http.Server, builder *app.EngineBuilder) *Server {
+func newServer(server *http.Server) *Server {
 	gin.SetMode(gin.ReleaseMode)
 
 	engine := gin.New()
@@ -41,14 +38,6 @@ func newServer(server *http.Server, builder *app.EngineBuilder) *Server {
 		engine: engine,
 		server: server,
 	}
-
-	builder.Background(async.Of(
-		async.Name("wk.api.serve"),
-		s.listenAndServe,
-	))
-	builder.HealthCheck(s, time.Second*10, func(_ context.Context) error {
-		return nil
-	})
 
 	return s
 }

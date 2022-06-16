@@ -16,7 +16,6 @@ func Module() dep.Module {
 		),
 		dep.SideEffects(
 			redisVersion,
-			redisHealthCheck,
 		),
 	)
 }

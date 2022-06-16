@@ -6,12 +6,16 @@ import (
 	"github.com/Raphy42/weekend/pkg/channel"
 )
 
+const (
+	InMemoryBusMaximumInFlightMessage = 4096
+)
+
 type InMemoryBus struct {
 	messages chan Message
 }
 
 func NewInMemoryBus() *InMemoryBus {
-	return &InMemoryBus{messages: make(chan Message, 256)}
+	return &InMemoryBus{messages: make(chan Message, InMemoryBusMaximumInFlightMessage)}
 }
 
 func (i *InMemoryBus) Emit(ctx context.Context, message Message) error {

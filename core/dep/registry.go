@@ -67,7 +67,7 @@ func (r *Registry) Register(dependency *Dependency) error {
 }
 
 var (
-	allDependencyKinds = slice.New(Factory, Transitive, Instance, SideEffect, Token)
+	allDependencyKinds = slice.New(Factory, Instance, SideEffect)
 )
 
 func (r *Registry) Kind(kinds ...Kind) []*Dependency {

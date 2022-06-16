@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/Raphy42/weekend/pkg/reflect"
-	"github.com/Raphy42/weekend/pkg/std/set"
 )
 
 type Health struct {
@@ -15,12 +14,14 @@ type Health struct {
 
 type Registry struct {
 	lock  sync.RWMutex
-	inner map[string]Health
+	last  chan Health
+	inner map[string]*Health
 }
 
 func NewRegistry() *Registry {
 	return &Registry{
-		inner: make(map[string]Health),
+		inner: make(map[string]*Health),
+		last:  make(chan Health, 1),
 	}
 }
 
@@ -31,21 +32,18 @@ func (r *Registry) Set(service any, err error) {
 	name := reflect.Typename(service)
 
 	now := time.Now()
-	health, ok := r.inner[name]
+	_, ok := r.inner[name]
 	if !ok {
-		r.inner[name] = Health{
-			Error:     err,
-			LastCheck: now,
-		}
-		return
+		r.inner[name] = &Health{}
 	}
-	health.Error = err
-	health.LastCheck = now
+	r.inner[name].Error = err
+	r.inner[name].LastCheck = now
+	r.last <- *r.inner[name]
 }
 
-func (r *Registry) Health() map[string]Health {
+func (r *Registry) HealthProbe() <-chan Health {
 	r.lock.RLock()
 	defer r.lock.RUnlock()
 
-	return set.Clone(r.inner)
+	return r.last
 }

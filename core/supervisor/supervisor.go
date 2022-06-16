@@ -2,6 +2,7 @@ package supervisor
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/palantir/stacktrace"
@@ -19,6 +20,7 @@ import (
 )
 
 type Supervisor struct {
+	lock      sync.RWMutex
 	name      string
 	bus       message.Bus
 	scheduler *scheduler.Scheduler
@@ -30,20 +32,24 @@ type Supervisor struct {
 func New(name string, children ...Spec) *Supervisor {
 	bus := message.NewInMemoryBus()
 	sched := scheduler.New(bus)
+	specLut := set.From(children, func(spec Spec) (xid.ID, *Spec) {
+		return spec.Manifest.ID, &spec
+	})
 
 	return &Supervisor{
 		name:      name,
 		bus:       bus,
 		scheduler: sched,
-		specLut: set.From(children, func(spec Spec) (xid.ID, *Spec) {
-			return spec.Manifest.ID, &spec
-		}),
-		children: make(map[xid.ID]*scheduler.Handle),
-		restarts: make(map[xid.ID]*atomic.Int32),
+		specLut:   specLut,
+		children:  make(map[xid.ID]*scheduler.Handle),
+		restarts:  make(map[xid.ID]*atomic.Int32),
 	}
 }
 
 func (s *Supervisor) registerHandle(handle *scheduler.Handle) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	s.children[handle.ID] = handle
 }
 
@@ -51,7 +57,13 @@ func (s *Supervisor) startChildren(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.supervisor").Start(ctx, "startChildren")
 	defer span.End()
 
+	log := logger.FromContext(ctx)
+
 	for _, spec := range s.specLut {
+		log.Debug("starting supervision of child",
+			zap.String("wk.supervisor.name", s.name),
+			zap.String("wk.manifest.name", spec.Manifest.Name),
+		)
 		if err := s.bus.Emit(ctx, scheduler.NewScheduleMessage(spec.Manifest.ID, spec.Args)); err != nil {
 			return stacktrace.Propagate(err, "unable to schedule child: %s", spec.Manifest.Name)
 		}
@@ -60,6 +72,9 @@ func (s *Supervisor) startChildren(ctx context.Context) error {
 }
 
 func (s *Supervisor) terminateChildren(ctx context.Context) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
+
 	ctx, span := otel.Tracer("wk.core.supervisor").Start(ctx, "terminateChildren")
 	defer span.End()
 
