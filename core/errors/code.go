@@ -38,6 +38,8 @@ const (
 	DType = 0x0b00
 	//DValue is an error domain related to values
 	DValue = 0x0c00
+	//DTransport is an error domain related to transports (tcp, etc...)
+	DTransport = 0x0d00
 
 	//ANotFound is an error axiom for missing or not found items
 	ANotFound = 0x0010
@@ -74,7 +76,8 @@ func init() {
 		RegisterDomain(DDependency, "dependency").
 		RegisterDomain(DSynchro, "sync").
 		RegisterDomain(DType, "type").
-		RegisterDomain(DValue, "value")
+		RegisterDomain(DValue, "value").
+		RegisterDomain(DTransport, "transport")
 	globalRegistry.
 		RegisterAxiom(ANotFound, "not_found").
 		RegisterAxiom(AMalformed, "malformed").

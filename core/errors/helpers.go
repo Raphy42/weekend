@@ -6,6 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/pkg/bitmask"
+	"github.com/Raphy42/weekend/pkg/std/slice"
 )
 
 //All executes a list of `func() error` and stops at the first non-nil error encountered
@@ -37,6 +38,12 @@ func HasFlag(err error, flag uint16) bool {
 		return bitmask.Has(uint16(v), flag)
 	}
 	return false
+}
+
+func HasAnyFlag(err error, flags ...uint16) bool {
+	return slice.Any(flags, func(flag uint16) bool {
+		return HasFlag(err, flag)
+	})
 }
 
 func IsTransient(err error) bool {
