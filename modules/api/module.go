@@ -13,7 +13,7 @@ func Module() dep.Module {
 			ginEngineFactory,
 		),
 		dep.SideEffects(
-			debugRoutes,
+			startServer,
 		),
 	)
 }

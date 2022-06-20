@@ -14,11 +14,11 @@ import (
 func apiEndpointFactory(controller *task.Controller, server *api.Server) error {
 	a := newApi(controller)
 
-	taskGroup := server.Group("/v1/tasks")
+	taskGroup := server.Group("/api/v1/tasks")
 	taskGroup.POST("", api.MakeJSONHandler(a.CreateTask))
 	taskGroup.DELETE("/:task_id", api.MakeJSONHandler(a.CancelTask))
 
-	workerGroup := server.Group("/v1/workers")
+	workerGroup := server.Group("/api/v1/workers")
 	workerGroup.GET("", api.MakeJSONHandler(a.ListWorkers))
 
 	return nil
