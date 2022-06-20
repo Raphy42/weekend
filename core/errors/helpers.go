@@ -6,7 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/pkg/bitmask"
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 //All executes a list of `func() error` and stops at the first non-nil error encountered

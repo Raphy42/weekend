@@ -10,19 +10,29 @@ const (
 	InMemoryBusMaximumInFlightMessage = 4096
 )
 
-type InMemoryBus struct {
+type InMemoryBus struct{}
+
+func NewInMemoryBus() *InMemoryBus {
+	return &InMemoryBus{}
+}
+
+func (i *InMemoryBus) Subject(ctx context.Context, subject string) (Mailbox, error) {
+	return NewInMemoryMailbox(), nil
+}
+
+type InMemoryMailbox struct {
 	messages chan Message
 }
 
-func NewInMemoryBus() *InMemoryBus {
-	return &InMemoryBus{messages: make(chan Message, InMemoryBusMaximumInFlightMessage)}
+func NewInMemoryMailbox() *InMemoryMailbox {
+	return &InMemoryMailbox{messages: make(chan Message, InMemoryBusMaximumInFlightMessage)}
 }
 
-func (i *InMemoryBus) Emit(ctx context.Context, message Message) error {
+func (i *InMemoryMailbox) Emit(ctx context.Context, message Message) error {
 	return channel.Send(ctx, message, i.messages)
 }
 
-func (i *InMemoryBus) Read(ctx context.Context) (<-chan Message, context.CancelFunc) {
+func (i *InMemoryMailbox) ReadC(ctx context.Context) (<-chan Message, context.CancelFunc) {
 	out := make(chan Message)
 	cancel := channel.Multicast(ctx, i.messages, out)
 	return out, cancel

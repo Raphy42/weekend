@@ -47,3 +47,10 @@ func (c *Container) Manifest() async.Manifest {
 		c.start,
 	)
 }
+
+func (c *Container) UnsafeExecute(ctx context.Context, fn any) error {
+	if c.graph == nil {
+		return stacktrace.NewError("application has not been initialised")
+	}
+	return c.graph.UnsafeExecute(ctx, fn)
+}

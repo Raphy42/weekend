@@ -9,7 +9,7 @@ import (
 
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/channel"
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 var (

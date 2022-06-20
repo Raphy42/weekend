@@ -55,5 +55,6 @@ func NewSpec(manifest async.Manifest, args any, opts ...StrategyOption) Spec {
 	return Spec{
 		Strategy: strategy,
 		Manifest: manifest,
+		Args:     args,
 	}
 }

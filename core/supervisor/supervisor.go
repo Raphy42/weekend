@@ -16,21 +16,21 @@ import (
 	"github.com/Raphy42/weekend/core/message"
 	"github.com/Raphy42/weekend/core/scheduler"
 	"github.com/Raphy42/weekend/core/scheduler/async"
-	"github.com/Raphy42/weekend/pkg/std/set"
+	"github.com/Raphy42/weekend/pkg/set"
 )
 
 type Supervisor struct {
 	lock      sync.RWMutex
 	name      string
-	bus       message.Bus
+	bus       message.Mailbox
 	scheduler *scheduler.Scheduler
 	specLut   map[xid.ID]*Spec
-	children  map[xid.ID]*scheduler.Handle
+	children  map[xid.ID]*scheduler.Future
 	restarts  map[xid.ID]*atomic.Int32
 }
 
 func New(name string, children ...Spec) *Supervisor {
-	bus := message.NewInMemoryBus()
+	bus := message.NewInMemoryMailbox()
 	sched := scheduler.New(bus)
 	specLut := set.From(children, func(spec Spec) (xid.ID, *Spec) {
 		return spec.Manifest.ID, &spec
@@ -41,12 +41,12 @@ func New(name string, children ...Spec) *Supervisor {
 		bus:       bus,
 		scheduler: sched,
 		specLut:   specLut,
-		children:  make(map[xid.ID]*scheduler.Handle),
+		children:  make(map[xid.ID]*scheduler.Future),
 		restarts:  make(map[xid.ID]*atomic.Int32),
 	}
 }
 
-func (s *Supervisor) registerHandle(handle *scheduler.Handle) {
+func (s *Supervisor) registerHandle(handle *scheduler.Future) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -140,7 +140,7 @@ func (s *Supervisor) supervise(ctx context.Context) error {
 	log := logger.FromContext(ctx).With(zap.String("wk.supervisor.name", s.name))
 	log.Debug("supervisor started")
 
-	messages, cancel := s.bus.Read(ctx)
+	messages, cancel := s.bus.ReadC(ctx)
 	defer cancel()
 
 	for {

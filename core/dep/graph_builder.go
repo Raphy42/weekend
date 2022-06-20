@@ -12,7 +12,7 @@ import (
 	"github.com/Raphy42/weekend/core/errors"
 	"github.com/Raphy42/weekend/core/logger"
 	"github.com/Raphy42/weekend/pkg/reflect"
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 type GraphBuilder struct {

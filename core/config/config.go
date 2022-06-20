@@ -7,7 +7,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 const (

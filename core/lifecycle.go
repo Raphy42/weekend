@@ -1,4 +1,4 @@
-package app
+package core
 
 import (
 	"sync"
@@ -35,7 +35,7 @@ func RegisterOnStopHook(fn func() error) {
 	globalLifecycles.onStop = append(globalLifecycles.onStop, fn)
 }
 
-func executeOnStart() error {
+func ExecuteOnStart() error {
 	globalLifecycles.RLock()
 	defer globalLifecycles.RUnlock()
 
@@ -47,7 +47,7 @@ func executeOnStart() error {
 	return nil
 }
 
-func executeOnStop() error {
+func ExecuteOnStop() error {
 	globalLifecycles.RLock()
 	defer globalLifecycles.RUnlock()
 

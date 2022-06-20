@@ -43,5 +43,6 @@ func newServer(server *http.Server) *Server {
 }
 
 func (s *Server) Group(name string) *gin.RouterGroup {
-	return s.engine.Group(name)
+	group := s.engine.Group(name)
+	return group
 }

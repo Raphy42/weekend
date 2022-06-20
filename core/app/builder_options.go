@@ -5,7 +5,7 @@ import (
 	"github.com/Raphy42/weekend/core/message"
 )
 
-func WithBus(bus message.Bus) BuilderOption {
+func WithBus(bus message.Mailbox) BuilderOption {
 	return func(builder *Builder) error {
 		builder.bus = bus
 		return nil

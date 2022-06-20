@@ -15,10 +15,15 @@ const (
 	payloadTypeMsgPack = "msgpack"
 )
 
+type Options struct {
+	Priority int `json:"priority" yaml:"priority"`
+}
+
 type Manifest struct {
-	Name        string `json:"name"`
-	Payload     []byte `json:"payload"`
-	PayloadType string `json:"payloadType"`
+	Name        string  `json:"name" yaml:"name"`
+	Payload     []byte  `json:"payload" yaml:"payload"`
+	PayloadType string  `json:"payloadType" yaml:"payloadType"`
+	Options     Options `json:"options" yaml:"options"`
 }
 
 func (m *Manifest) Unmarshal(v any) error {
@@ -29,7 +34,7 @@ func (m *Manifest) Unmarshal(v any) error {
 		}
 	case payloadTypeMsgPack:
 		if err := msgpack.Unmarshal(m.Payload, &v); err != nil {
-			return stacktrace.Propagate(err, "JSON decoding failed")
+			return stacktrace.Propagate(err, "MsgPack decoding failed")
 		}
 	}
 
@@ -44,7 +49,7 @@ func newManifest(name, encoding string, buf []byte) *Manifest {
 	}
 }
 
-func MarshallJSON(name string, args any) (*Manifest, error) {
+func JSON(name string, args any) (*Manifest, error) {
 	buf, err := json.Marshal(args)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "JSON encoding failed")
@@ -52,7 +57,7 @@ func MarshallJSON(name string, args any) (*Manifest, error) {
 	return newManifest(name, payloadTypeJSON, buf), nil
 }
 
-func MarshallMsgPack(name string, args any) (*Manifest, error) {
+func MsgPack(name string, args any) (*Manifest, error) {
 	buf, err := msgpack.Marshal(args)
 	if err != nil {
 		return nil, stacktrace.Propagate(err, "JSON encoding failed")

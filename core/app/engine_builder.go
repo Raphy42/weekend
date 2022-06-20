@@ -13,7 +13,7 @@ import (
 	"github.com/Raphy42/weekend/core/supervisor"
 	"github.com/Raphy42/weekend/pkg/chrono"
 	"github.com/Raphy42/weekend/pkg/reflect"
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 type EngineBuilder struct {

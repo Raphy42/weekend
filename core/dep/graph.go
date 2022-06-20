@@ -6,6 +6,7 @@ import (
 	"github.com/palantir/stacktrace"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 
 	"github.com/Raphy42/weekend/core/dep/topo"
@@ -17,12 +18,14 @@ import (
 type Graph struct {
 	registry *Registry
 	topo     *topo.Graph
+	solved   *atomic.Bool
 }
 
 func NewGraph(topo *topo.Graph, registry *Registry) *Graph {
 	return &Graph{
 		registry: registry,
 		topo:     topo,
+		solved:   atomic.NewBool(false),
 	}
 }
 
@@ -150,5 +153,17 @@ func (g *Graph) Solve(ctx context.Context) error {
 	}
 	log.Info("all side effects executed", zap.Int("wk.side_effect.count", len(sideEffects)))
 
+	g.solved.Store(true)
 	return nil
+}
+
+func (g *Graph) UnsafeExecute(ctx context.Context, fn interface{}) error {
+	if !g.solved.Load() {
+		return stacktrace.NewError("application must be up and running before accessing DI system")
+	}
+	dependency, err := NewSideEffect(fn)
+	if err != nil {
+		return err
+	}
+	return g.executeDependency(ctx, dependency)
 }

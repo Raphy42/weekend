@@ -1,0 +1,2 @@
+- handle html strip from reflection tags
+- fixed ids for static manifests and types (codegen)

@@ -1,6 +1,8 @@
 package topo
 
-import "github.com/Raphy42/weekend/pkg/std/set"
+import (
+	"github.com/Raphy42/weekend/pkg/set"
+)
 
 func (g *Graph) Roots() []string {
 	return set.CollectSlice(g.inputs, func(k string, v int) (string, bool) {

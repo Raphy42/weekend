@@ -13,7 +13,7 @@ import (
 	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
-type Handle struct {
+type Future struct {
 	*Context
 	ID         xid.ID
 	ManifestID xid.ID
@@ -21,7 +21,7 @@ type Handle struct {
 	error      <-chan error
 }
 
-func NewHandle(ctx context.Context, parent xid.ID, manifest async.Manifest) (*Handle, chan<- any, chan<- error) {
+func NewFuture(ctx context.Context, parent xid.ID, manifest async.Manifest) (*Future, chan<- any, chan<- error) {
 	switch v := ctx.(type) {
 	case Context:
 		parent = v.Parent
@@ -29,7 +29,7 @@ func NewHandle(ctx context.Context, parent xid.ID, manifest async.Manifest) (*Ha
 
 	result := make(chan any)
 	err := make(chan error)
-	return &Handle{
+	return &Future{
 		Context:    NewContext(ctx, parent),
 		ID:         xid.New(),
 		ManifestID: manifest.ID,
@@ -38,7 +38,7 @@ func NewHandle(ctx context.Context, parent xid.ID, manifest async.Manifest) (*Ha
 	}, result, err
 }
 
-func (h Handle) Poll(ctx context.Context) (any, error) {
+func (h Future) Poll(ctx context.Context) (any, error) {
 	ctx, span := otel.Tracer("wk.core.scheduler").Start(ctx, "poll")
 	span.SetAttributes(
 		attribute.Stringer("wk.handle.id", h.ID),
@@ -57,17 +57,17 @@ func (h Handle) Poll(ctx context.Context) (any, error) {
 	}
 }
 
-func (h Handle) TryPoll(ctx context.Context, duration time.Duration) (any, error) {
+func (h Future) TryPoll(ctx context.Context, duration time.Duration) (any, bool, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, duration)
 	defer cancel()
 
 	result, err := h.Poll(timeoutCtx)
 	if errors.HasCode(err, errors.EInvalidContext) {
-		return nil, nil
+		return nil, false, nil
 	}
-	return result, err
+	return result, true, err
 }
 
-func (h Handle) Error() <-chan error {
+func (h Future) Error() <-chan error {
 	return h.error
 }

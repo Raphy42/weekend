@@ -5,7 +5,7 @@ import (
 
 	"github.com/rs/xid"
 
-	"github.com/Raphy42/weekend/pkg/std/slice"
+	"github.com/Raphy42/weekend/pkg/slice"
 )
 
 type Registry struct {

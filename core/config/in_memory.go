@@ -8,7 +8,7 @@ import (
 	"github.com/palantir/stacktrace"
 
 	"github.com/Raphy42/weekend/core/errors"
-	"github.com/Raphy42/weekend/pkg/std/set"
+	"github.com/Raphy42/weekend/pkg/set"
 )
 
 type InMemoryConfig struct {

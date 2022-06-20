@@ -60,7 +60,7 @@ func ParentID(ctx context.Context) xid.ID {
 	}
 }
 
-func busFromContext(ctx context.Context) (message.Bus, error) {
+func busFromContext(ctx context.Context) (message.Mailbox, error) {
 	switch v := ctx.(type) {
 	case *Context:
 		return busFromContext(*v)

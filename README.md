@@ -2,31 +2,22 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/Raphy42/weekend)](https://goreportcard.com/report/github.com/Raphy42/weekend)
 
 # weekend
-
 All included golang toolkit
 
 ## Status
-
 Heavy WIP
 
-## Current features
-
+## Default features
 - latest go version for reduced boilerplate (generics)
+- lightweight runtime DI system, including a way to define health-checks for injected services
 - unique lexicographically sortable ids generated with `rs/xid` (supported by multiple languages)
 - `context.Context` based scheduling system (lightly based on supervision trees)
 - error management based on `palantir/stacktrace` thanks to bitmasks
 - context aware structured logging with `uber/zap`
 - bus system for event sourcing, available from within scheduled domain
+- automatic tracing through opentelemetry, injected in asynchronous contexts, redis, gorm, and gin
 
-## Coming soon
-
-- stabilisation of `platform` module (environment, secrets)
-- stabilisation of `scheduler.Supervisor` (policies, lifecycle)
-- `task` module for distributed job scheduling
-
-## Planned
-
-- monitoring gRPC API
-- driver interface for message brokers (redis, kafka)
-- database interface for RDBMS drivers (postgres, redis)
-- resilient plugin system to reduce dependency bloat (for external drivers)
+## Gated features (use tag when compiling to enable)
+- `ops.sentry`: sentry panic handler
+- `gorm.postgres`: gorm postgres support
+- `gorm.sqlite`: gorm sqlite support

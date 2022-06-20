@@ -10,19 +10,20 @@ import (
 	"github.com/Raphy42/weekend/modules/api"
 	"github.com/Raphy42/weekend/modules/core"
 	"github.com/Raphy42/weekend/modules/gorm"
+	"github.com/Raphy42/weekend/modules/nats"
 	"github.com/Raphy42/weekend/modules/redis"
 )
 
 // build with the following tags
 // - ops.sentry
-// - task.encoding.msgpack
 
 const name = "chat.api"
 
 func main() {
+	ctx := context.Background()
 	defer errors.InstallPanicObserver()
 
-	ctx, span := telemetry.Install(name).Start(context.Background(), "main")
+	ctx, span := telemetry.Install(name).Start(ctx, "main")
 	defer span.End()
 
 	sdk, err := app.New(name,
@@ -35,6 +36,7 @@ func main() {
 			redis.Module(),
 			api.Module(),
 			gorm.Module(),
+			nats.Module(),
 		),
 	)
 	errors.Mustf(err, "could not create application")

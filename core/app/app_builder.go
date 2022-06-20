@@ -14,7 +14,7 @@ type Builder struct {
 	sync.RWMutex
 	done    bool
 	name    string
-	bus     message.Bus
+	bus     message.Mailbox
 	modules []dep.Module
 }
 

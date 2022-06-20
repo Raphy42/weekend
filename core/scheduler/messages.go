@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/rs/xid"
 
+	"github.com/Raphy42/weekend/core"
 	"github.com/Raphy42/weekend/core/message"
 )
 
@@ -14,6 +15,19 @@ const (
 	MSuccess   = "wk.scheduler#success"
 	MFailure   = "wk.scheduler#failure"
 )
+
+func init() {
+	core.RegisterOnStartHook(func() error {
+		message.GlobalDecoderRegistry.
+			Register(MSchedule, message.NewDecoder[ScheduleMessagePayload]()).
+			Register(MScheduled, message.NewDecoder[ScheduledMessagePayload]()).
+			Register(MProgress, message.NewDecoder[ProgressMessagePayload]()).
+			Register(MSuccess, message.NewDecoder[SuccessMessagePayload]()).
+			Register(MFailure, message.NewDecoder[FailureMessagePayload]())
+
+		return nil
+	})
+}
 
 type ScheduleMessagePayload struct {
 	ManifestID xid.ID

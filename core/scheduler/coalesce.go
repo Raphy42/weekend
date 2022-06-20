@@ -14,7 +14,7 @@ type CoalescedResult struct {
 	Error  error
 }
 
-func Coalesce(ctx context.Context, handles ...*Handle) chan CoalescedResult {
+func Coalesce(ctx context.Context, handles ...*Future) chan CoalescedResult {
 	results := make(chan CoalescedResult, len(handles))
 	for _, handle := range handles {
 		handle := handle

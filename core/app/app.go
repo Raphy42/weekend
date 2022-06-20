@@ -29,7 +29,7 @@ type App struct {
 	cancel       context.CancelFunc
 	container    *dep.Container
 	scheduler    *scheduler.Scheduler
-	engineHandle *scheduler.Handle
+	engineHandle *scheduler.Future
 	healthProbe  <-chan service.Health
 	engine       *Engine
 }
@@ -61,34 +61,31 @@ func (a *App) module() dep.Module {
 	)
 }
 
-func (a *App) Start(rootCtx context.Context) error {
-	rootCtx, span := otel.Tracer("wk.core.app").Start(rootCtx, "App.Start")
-	defer span.End()
-
-	log := logger.FromContext(rootCtx).With(zap.String("wk.app", a.name))
-	log.Info("starting application")
-
-	if err := executeOnStart(); err != nil {
-		return stacktrace.Propagate(err, "global application stopping hooks could not be run successfully")
-	}
-
+func (a *App) Start(ctx context.Context) error {
 	timer := chrono.NewChrono()
 	timer.Start()
+
+	log := logger.FromContext(ctx).With(zap.String("wk.app", a.name))
+	log.Info("starting application")
+
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, os.Kill)
+	log.Debug("signal handlers installed")
+
+	ctx, span := otel.Tracer("wk.core.app").Start(ctx, "App.Start")
+	defer span.End()
+
+	a.ctx = ctx
+	a.cancel = cancel
+
+	if err := core.ExecuteOnStart(); err != nil {
+		return stacktrace.Propagate(err, "global application stopping hooks could not be run successfully")
+	}
 
 	a.lock.Lock()
 	defer a.lock.Unlock()
 
-	if err := errors.ValidateContext(rootCtx); err != nil {
-		return err
-	}
-
-	ctx, cancel := signal.NotifyContext(rootCtx, os.Interrupt, os.Kill)
-	log.Debug("signal handlers installed")
-	a.ctx = ctx
-	a.cancel = cancel
-
-	span.AddEvent("hooks.global.on_start")
-	if err := executeOnStart(); err != nil {
+	span.AddEvent("wk.lifecycle.on_start")
+	if err := core.ExecuteOnStart(); err != nil {
 		return stacktrace.Propagate(err, "global application starting hooks could not be run successfully")
 	}
 	log.Debug("global start hooks ran successfully", zap.Duration("wk.init.duration", timer.Elapsed()))
@@ -120,7 +117,7 @@ func (a *App) Wait(ctx context.Context) error {
 	ctx, span := otel.Tracer("wk.core.app").Start(ctx, "App.Wait")
 	defer span.End()
 
-	result := make(chan error, 1)
+	result := make(chan error)
 	if a.engine == nil {
 		errors.Must(channel.Send(ctx, stacktrace.NewError("application is missing `core.Module()`"), result))
 	}
@@ -146,8 +143,9 @@ func (a *App) Wait(ctx context.Context) error {
 
 	//todo actually execute this synchronously
 	defer a.engineHandle.Cancel()
+	// todo fix span being dropped before this can be invoked
 	defer func() {
-		span.RecordError(executeOnStop())
+		span.RecordError(core.ExecuteOnStop())
 	}()
 
 	return <-result

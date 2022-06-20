@@ -16,19 +16,17 @@ import (
 	"github.com/Raphy42/weekend/core/scheduler/async"
 )
 
-// todo handle the case where the bus is full
-
 type Scheduler struct {
 	sync.RWMutex
 	id  xid.ID
-	bus message.Bus
+	bus message.Mailbox
 }
 
-func New(bus message.Bus) *Scheduler {
+func New(bus message.Mailbox) *Scheduler {
 	return &Scheduler{bus: bus, id: xid.New()}
 }
 
-func Schedule(ctx context.Context, manifest async.Manifest, args any) (*Handle, error) {
+func Schedule(ctx context.Context, manifest async.Manifest, args any) (*Future, error) {
 	ctx, span := otel.Tracer("wk.core.schedule").Start(ctx, "scheduleFromContext")
 	span.SetAttributes(
 		attribute.String("wk.manifest.name", manifest.Name),
@@ -60,7 +58,7 @@ func Schedule(ctx context.Context, manifest async.Manifest, args any) (*Handle, 
 	}
 }
 
-func (s *Scheduler) Schedule(parent context.Context, manifest async.Manifest, args any) (*Handle, error) {
+func (s *Scheduler) Schedule(parent context.Context, manifest async.Manifest, args any) (*Future, error) {
 	parent, span := otel.Tracer("wk.core.schedule").Start(parent, "schedule")
 	span.SetAttributes(
 		attribute.String("wk.manifest.name", manifest.Name),
@@ -69,7 +67,7 @@ func (s *Scheduler) Schedule(parent context.Context, manifest async.Manifest, ar
 	)
 	defer span.End()
 
-	handle, resultChan, errChan := NewHandle(parent, s.id, manifest)
+	handle, resultChan, errChan := NewFuture(parent, s.id, manifest)
 	log := logger.FromContext(parent).With(
 		zap.Stringer("wk.sched.id", handle.ID),
 		zap.String("wk.sched.name", manifest.Name),
@@ -83,12 +81,11 @@ func (s *Scheduler) Schedule(parent context.Context, manifest async.Manifest, ar
 
 	log.Debug("scheduling function")
 	_ = s.bus.Emit(handle, NewScheduledMessage(manifest.Name, manifest.ID, handle.Parent))
-	go func(ctx context.Context, resultC chan<- any, errC chan<- error, f async.Fn, in any, bus message.Bus) {
+	go func(ctx context.Context, resultC chan<- any, errC chan<- error, f async.Fn, in any, bus message.Mailbox) {
 		ctx, goRoutineSpan := otel.Tracer("wk.core.schedule").Start(ctx, "goroutine")
 		goRoutineSpan.SetAttributes(attribute.String("wk.manifest.name", manifest.Name))
 		defer goRoutineSpan.End()
 
-		// todo install telemetry
 		defer errors.InstallPanicObserver()
 		defer func() {
 			_ = log.Sync()

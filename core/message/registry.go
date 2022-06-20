@@ -1,78 +1,46 @@
 package message
 
 import (
-	"sync"
-
 	"github.com/palantir/stacktrace"
-	"go.uber.org/atomic"
+	"github.com/vmihailenco/msgpack/v5"
 
-	"github.com/Raphy42/weekend/core/errors"
+	"github.com/Raphy42/weekend/pkg/concurrent_set"
 )
 
-type RegistrySlot struct {
-	next  *atomic.Uint32
-	inner map[uint32]Handler
-}
-
-func newRegistrySlot() *RegistrySlot {
-	return &RegistrySlot{
-		next:  atomic.NewUint32(0),
-		inner: make(map[uint32]Handler),
+func NewDecoder[T any]() DecoderFunc {
+	return func(buf []byte) (any, error) {
+		value := new(T)
+		if err := msgpack.Unmarshal(buf, value); err != nil {
+			return nil, err
+		}
+		return value, nil
 	}
 }
 
-func (r *RegistrySlot) Register(handler Handler) uint32 {
-	slot := r.next.Inc()
-	r.inner[slot] = handler
-	return slot
+type DecoderFunc func(buf []byte) (any, error)
+
+type DecoderRegistry struct {
+	decoders concurrent_set.Set[string, DecoderFunc]
 }
 
-func (r *RegistrySlot) Unregister(slot uint32) error {
-	_, ok := r.inner[slot]
-	if ok {
-		delete(r.inner, slot)
-		return nil
-	}
-	return stacktrace.NewErrorWithCode(
-		errors.EUnreachable,
-		"trying to unregister a handler with an invalid slot: %d", slot,
-	)
+func NewRegistry() *DecoderRegistry {
+	return &DecoderRegistry{decoders: concurrent_set.New[string, DecoderFunc]()}
 }
 
-type Registry struct {
-	sync.RWMutex
-	handlers map[string]*RegistrySlot
+func (r *DecoderRegistry) Register(kind string, decoderFunc DecoderFunc) *DecoderRegistry {
+	r.decoders.Insert(kind, decoderFunc)
+	return r
 }
 
-func (r *Registry) Register(kind string, handler Handler) uint32 {
-	r.Lock()
-	defer r.Unlock()
-
-	_, ok := r.handlers[kind]
+func (r *DecoderRegistry) Decode(kind string, buf []byte) (any, error) {
+	decoder, ok := r.decoders.Get(kind)
 	if !ok {
-		r.handlers[kind] = newRegistrySlot()
-	}
-	return r.handlers[kind].Register(handler)
-}
-
-func (r *Registry) Unregister(kind string, slot uint32) error {
-	r.Lock()
-	defer r.Unlock()
-
-	_, ok := r.handlers[kind]
-	if !ok {
-		return stacktrace.NewErrorWithCode(
-			errors.EUnreachable,
-			"trying to unregister an unknown handler kind: '%s'", kind,
+		return nil, stacktrace.NewError(
+			"unknown payload type for '%s', add it with message.GlobalDecoderRegistry.Register(%s, func(...))",
+			kind, kind,
 		)
 	}
-
-	if err := r.handlers[kind].Unregister(slot); err != nil {
-		return stacktrace.Propagate(
-			err,
-			"handler has not been previously registered or slot is invalid: '%s'",
-			kind,
-		)
-	}
-	return nil
+	return decoder(buf)
 }
+
+var GlobalDecoderRegistry = NewRegistry()

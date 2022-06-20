@@ -12,5 +12,8 @@ func Module() dep.Module {
 		dep.Factories(
 			ginEngineFactory,
 		),
+		dep.SideEffects(
+			debugRoutes,
+		),
 	)
 }

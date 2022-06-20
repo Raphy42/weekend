@@ -86,3 +86,11 @@ func AsMapInterfaceInterface[K comparable](in map[K]any) map[any]any {
 	}
 	return out
 }
+
+func Map[K comparable, Vin any, Vout any](values map[K]Vin, fn func(in Vin) Vout) map[K]Vout {
+	out := make(map[K]Vout)
+	for k, v := range values {
+		out[k] = fn(v)
+	}
+	return out
+}

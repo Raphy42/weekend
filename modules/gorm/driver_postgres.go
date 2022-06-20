@@ -5,7 +5,9 @@ package gorm
 import (
 	"gorm.io/gorm"
 
-	"github.com/Raphy42/weekend/core/app"
+	"gorm.io/driver/postgres"
+
+	"github.com/Raphy42/weekend/core"
 )
 
 func postgresDialector() func(dsn string) gorm.Dialector {
@@ -15,10 +17,10 @@ func postgresDialector() func(dsn string) gorm.Dialector {
 }
 
 func init() {
-	app.RegisterOnStartHook(func() error {
+	core.RegisterOnStartHook(func() error {
 		globalDriver.Register("postgres", postgresDialector())
 	})
-	app.RegisterOnStartHook(func() error {
+	core.RegisterOnStartHook(func() error {
 		globalDriver.Register("postgresql", postgresDialector())
 	})
 }
